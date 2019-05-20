@@ -1,11 +1,12 @@
-import discord
-from discord.ext import tasks, commands
-import sqlite3
-import re
-import datetime
 import asyncio
-import win32gui, win32con
+import datetime
 import os
+import re
+import sqlite3
+
+import discord
+import win32con
+import win32gui
 from c__lib.c__input import yes_no_input
 
 # todo: Clean up `db` mess.
@@ -26,18 +27,18 @@ class DbUser:
     LastRewardGainedDateTime: datetime.datetime = epoch_time
     LastCurrencyGainedDateTime: datetime.datetime = epoch_time
 
-    def __init__(self, db: sqlite3.Connection, id=None, row=None):
+    def __init__(self, db: sqlite3.Connection, user_id=None, row=None):
         self.loaded = False
         self.db = db
-        if hasattr(id, '__iter__'):
-            row = id
-            id = None
+        if hasattr(user_id, '__iter__'):
+            row = user_id
+            user_id = None
         if row is not None:
             self.fill_data(row)
-        elif id is not None:
-            self.load(id)
+        elif user_id is not None:
+            self.load(user_id)
 
-    def load(self, id: int):
+    def load(self, user_id: int):
         sql = 'SELECT ' \
               ' ID,' \
               ' Name,' \
@@ -51,13 +52,13 @@ class DbUser:
               'WHERE ' \
               ' ID = ?'
         c = self.db.cursor()
-        c.execute(sql, [id])
+        c.execute(sql, [user_id])
         row = c.fetchone()
         if row is not None:
             self.fill_data(row)
             return self
         else:
-            self.fill_data(insert_member(self.db, id=id))
+            self.fill_data(insert_member(self.db, user_id=user_id))
 
     def fill_data(self, row, other=None):
         if other is not None:
@@ -144,8 +145,8 @@ class Command:
             return False
 
     def run(self, message: discord.Message):
-        for re in self.re_list:
-            match = re.match(message.content)
+        for regex in self.re_list:
+            match = regex.match(message.content)
             if match is not None:
                 break
         else:
@@ -242,7 +243,7 @@ class Cubot(discord.Client):
 
     async def loop_calls(self):
         await self.update_currencies()
-        await asyncio.sleep(60*60)
+        await asyncio.sleep(60 * 60)
 
     async def help(self, message: discord.Message):
         help_str = '```'
@@ -258,7 +259,7 @@ class Cubot(discord.Client):
         print(help_str)
         await message.channel.send(help_str)
 
-    def init_database(self, db:sqlite3.Connection = None):
+    def init_database(self, db: sqlite3.Connection = None):
         if db is None:
             db = self.database
         tables_sql = [
@@ -269,8 +270,7 @@ class Cubot(discord.Client):
             '	"DateTime"	TEXT,'
             '	"Amount"	INTEGER,'
             '	"Reason"	TEXT'
-            ')'
-            ,
+            ')',
             'CREATE TABLE "Users" ('
             '	"ID"	INTEGER NOT NULL UNIQUE,'
             '	"Name"	TEXT DEFAULT \'-\','
@@ -280,8 +280,7 @@ class Cubot(discord.Client):
             '	"LastRewardGainedDateTime"	TEXT DEFAULT \'1970-01-01 00:00:00.000\','
             '	"LastCurrencyGainedDateTime"	TEXT DEFAULT \'1970-01-01 00:00:00.000\','
             '	PRIMARY KEY("ID")'
-            ')'
-            ,
+            ')',
             'CREATE TABLE "CommandLog" ('
             '	"ID"	INTEGER PRIMARY KEY AUTOINCREMENT,'
             '	"Guild"	TEXT NOT NULL,'
@@ -327,7 +326,7 @@ class Cubot(discord.Client):
         c.execute('SELECT * FROM Users')
         db_users = [DbUser(self.database, row=row) for row in c.fetchall()]
         for member in guild.members:
-            assert(isinstance(member, discord.Member))
+            assert (isinstance(member, discord.Member))
             insert_member(self.database, member, db_users=db_users)
 
     async def update_all(self, message: discord.Message):
@@ -337,22 +336,22 @@ class Cubot(discord.Client):
         await message.channel.send('Update finished.')
 
 
-def insert_member(db: sqlite3.Connection, member: discord.Member = None, id=None, db_users=None):
+def insert_member(db: sqlite3.Connection, member: discord.Member = None, user_id=None, db_users=None):
     if db_users is None:
         c = db.cursor()
         c.execute('SELECT ID, Name, AvailableCurrency, LastCurrencyGainedDateTime FROM Users')
         db_users = [DbUser(db, row=row) for row in c.fetchall()]
 
-    if member is None and id is not None:
+    if member is None and user_id is not None:
         name = '<not filled>'
-        id = id
+        user_id = user_id
     else:
         name = str(member)
-        id = member.id
+        user_id = member.id
 
     if member.id not in [u.id for u in db_users]:
         u = DbUser(db)
-        u.id = id
+        u.id = user_id
         u.Name = name
         u.LastCurrencyGainedDateTime = datetime.datetime.now()
         u.AvailableCurrency = 5000
@@ -362,7 +361,7 @@ def insert_member(db: sqlite3.Connection, member: discord.Member = None, id=None
         return [u for u in db_users if u.id == member.id][0]
 
 
-def date_to_db(date: datetime.datetime=epoch_time):
+def date_to_db(date: datetime.datetime = epoch_time):
     return date.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
 
 
@@ -378,12 +377,13 @@ def db_to_date(string: str):
 async def add_bounty(message: discord.Message, db: sqlite3.Connection, **kwargs):
     """
     Adds reward to member from user's pool.
+    :param db: database connection
     :param message: Requesting Message object.
     :param kwargs: {target: <user_id>, amount: <currency>}
     :return:
     """
-    user = DbUser(db, id=message.author.id)
-    target = DbUser(db, id=int(kwargs['target']))
+    user = DbUser(db, user_id=message.author.id)
+    target = DbUser(db, user_id=int(kwargs['target']))
     if kwargs['amount'] == 'all':
         amount = user.AvailableCurrency
     else:
@@ -415,9 +415,10 @@ async def add_bounty(message: discord.Message, db: sqlite3.Connection, **kwargs)
         return True
 
 
-async def profile_picture(message: discord.Message, db: sqlite3.Connection, **kwargs):
+async def profile_picture(message: discord.Message, __: sqlite3.Connection, **kwargs):
     """
     Displays full sized profile picture of either user or a mentioned member.
+    :param __:
     :param message:
     :param kwargs:
     :return:
@@ -428,8 +429,8 @@ async def profile_picture(message: discord.Message, db: sqlite3.Connection, **kw
         user = message.guild.get_member(int(kwargs['mention']))
 
     embed = discord.Embed(
-            title=f'{user.name}\'s profile picture.',
-            # description='{}\'s profile picture.'.format(user.mention) , color=0xecce8b
+        title=f'{user.name}\'s profile picture.',
+        # description='{}\'s profile picture.'.format(user.mention) , color=0xecce8b
     )
     embed.set_image(url=user.avatar_url)
     await message.channel.send(
@@ -439,9 +440,10 @@ async def profile_picture(message: discord.Message, db: sqlite3.Connection, **kw
     return True
 
 
-async def get_user_id(message: discord.Message, db: sqlite3.Connection, **kwargs):
+async def get_user_id(message: discord.Message, __: sqlite3.Connection, **kwargs):
     """
     Displays full sized profile picture of either user or a mentioned member.
+    :param __:
     :param message:
     :param kwargs:
     :return:
@@ -457,16 +459,16 @@ async def get_user_id(message: discord.Message, db: sqlite3.Connection, **kwargs
     return True
 
 
-async def my_currency(message: discord.Message, db: sqlite3.Connection, **kwargs):
+async def my_currency(message: discord.Message, db: sqlite3.Connection, **__):
     """
     Displays user's currency.
     :param db:
     :param message:
-    :param kwargs:
+    :param __: kwargs
     :return:
     """
 
-    user = DbUser(db, id=message.author.id)
+    user = DbUser(db, user_id=message.author.id)
 
     if not user.loaded:
         user = insert_member(db=db, member=message.author)
@@ -475,11 +477,11 @@ async def my_currency(message: discord.Message, db: sqlite3.Connection, **kwargs
     return True
 
 
-async def leaderboards(message: discord.Message, db: sqlite3.Connection, **kwargs):
+async def leaderboards(message: discord.Message, db: sqlite3.Connection, **__):
     """
     :param message:
     :param db:
-    :param kwargs:
+    :param __: kwargs
     :return:
     """
 
@@ -499,6 +501,7 @@ async def leaderboards(message: discord.Message, db: sqlite3.Connection, **kwarg
 
     await message.channel.send(table)
     return True
+
 
 def start_cubot():
     # global db, client
