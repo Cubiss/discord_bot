@@ -6,6 +6,7 @@ import datetime
 import asyncio
 import win32gui, win32con
 import os
+from c__lib.c__input import yes_no_input
 
 # todo: Clean up `db` mess.
 # todo: Use async wrapper for sqlite3.
@@ -186,10 +187,11 @@ class Cubot(discord.Client):
                 database = './cubot.db'
             if os.path.isfile(database):
                 self.database = sqlite3.connect(database)
-            else:
-                
+            elif yes_no_input('Database file not found. Should I create and initialize a new one? [y/n]'):
                 self.database = sqlite3.connect(database)
                 self.init_database(self.database)
+            else:
+                raise Exception('Database file not found.')
 
         self.log_commands = log_commands
 
