@@ -3,11 +3,13 @@ import datetime
 import os
 import re
 import sqlite3
+from typing import Coroutine
 
 import discord
 import win32con
 import win32gui
 from c__lib.c__input import yes_no_input
+
 
 # todo: Clean up `db` mess.
 # todo: Use async wrapper for sqlite3.
@@ -129,7 +131,26 @@ class DbUser:
 
 
 class Command:
-    def __init__(self, names, regexp, command, usage=None, description='', cmd_char='!'):
+    def __init__(
+            self,
+            names: list,
+            regexp: str,
+            command: callable,
+            usage=None,
+            description='',
+            cmd_char='!'):
+        """
+        Creates a command.
+        :param names: Aliases of the command. First name is
+        :param regexp: regex representation of messages that can be processed with this command
+        :param command: coroutine(message: discord.Message, db: sqlite3.Connection, **kwargs) -> bool:
+                        message is message object that command will react to,
+                        db is connection to a database
+                        kwargs are arguments parsed from regexp groups
+        :param usage: String showing how the command should be called.
+        :param description: String saying what command should do.
+        :param cmd_char: String every command will start with.
+        """
         self.cmd_char = cmd_char
         self.names = names
         self.command = command
@@ -477,7 +498,7 @@ async def my_currency(message: discord.Message, db: sqlite3.Connection, **__):
     return True
 
 
-async def leaderboards(message: discord.Message, db: sqlite3.Connection, **__):
+async def leaderboards(message: discord.Message, db: sqlite3.Connection, **__) -> bool:
     """
     :param message:
     :param db:
@@ -558,17 +579,7 @@ def start_cubot():
         )
     )
 
-    # client.addcom(
-    #     Command(
-    #         names=['update'],
-    #         regexp=r'^__name__.*$',
-    #         command=update_all,
-    #         usage=f'__author__ Usage: !update',
-    #         description='Updates currencies manually.'
-    #     )
-    # )
-
-    client.run(r'NDgyMTY4NzU1NjcwMDg5NzM4.XMv8Mw.OQlSYBDR7p1NEGV-AoEOfatWPjM')
+    client.run(open('token', 'r').read())
 
 
 if __name__ == '__main__':
