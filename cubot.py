@@ -151,6 +151,7 @@ class Command:
         :param description: String saying what command should do.
         :param cmd_char: String every command will start with.
         """
+        self.db = None
         self.cmd_char = cmd_char
         self.names = names
         self.command = command
@@ -165,7 +166,7 @@ class Command:
         else:
             return False
 
-    def run(self, message: discord.Message):
+    def run(self, message: discord.Message, client: discord.Client):
         for regex in self.re_list:
             match = regex.match(message.content)
             if match is not None:
@@ -173,7 +174,7 @@ class Command:
         else:
             return message.channel.send(self.format_string(message=message, string=self.usage))
 
-        return self.command(message, **match.groupdict())
+        return self.command(message, self.db, client, **match.groupdict())
 
     def format_string(self, string: str, message: discord.Message):
         string = string.replace('__name__', self.names[0])
@@ -223,6 +224,7 @@ class Cubot(discord.Client):
         super(Cubot, self).__init__(*args, **kwargs)
 
     def addcom(self, command):
+        command.db = self.database
         self.commands.append(command)
 
     async def on_ready(self):
@@ -250,7 +252,7 @@ class Cubot(discord.Client):
         for command in self.commands:
             if command.match(message):
                 try:
-                    await command.run(message)
+                    await command.run(message, self)
                     if self.log_commands:
                         print(f'[{datetime.datetime.now()}][{message.guild.name}]{message.author}: {message.content}')
                 except Exception as ex:
@@ -394,8 +396,9 @@ def db_to_date(string: str):
         print(string + '000')
         raise
 
+#  ############################# COMMANDS #############################################################################
 
-async def add_bounty(message: discord.Message, db: sqlite3.Connection, **kwargs):
+async def add_bounty(message: discord.Message, db: sqlite3.Connection, client: discord.Client, **kwargs):
     """
     Adds reward to member from user's pool.
     :param db: database connection
@@ -436,7 +439,7 @@ async def add_bounty(message: discord.Message, db: sqlite3.Connection, **kwargs)
         return True
 
 
-async def profile_picture(message: discord.Message, __: sqlite3.Connection, **kwargs):
+async def profile_picture(message: discord.Message, __: sqlite3.Connection, client: discord.Client, **kwargs):
     """
     Displays full sized profile picture of either user or a mentioned member.
     :param __:
@@ -461,7 +464,7 @@ async def profile_picture(message: discord.Message, __: sqlite3.Connection, **kw
     return True
 
 
-async def get_user_id(message: discord.Message, __: sqlite3.Connection, **kwargs):
+async def get_user_id(message: discord.Message, __: sqlite3.Connection, client: discord.Client, **kwargs):
     """
     Displays full sized profile picture of either user or a mentioned member.
     :param __:
@@ -480,7 +483,7 @@ async def get_user_id(message: discord.Message, __: sqlite3.Connection, **kwargs
     return True
 
 
-async def my_currency(message: discord.Message, db: sqlite3.Connection, **__):
+async def my_currency(message: discord.Message, db: sqlite3.Connection, client: discord.Client, **__):
     """
     Displays user's currency.
     :param db:
@@ -498,7 +501,7 @@ async def my_currency(message: discord.Message, db: sqlite3.Connection, **__):
     return True
 
 
-async def leaderboards(message: discord.Message, db: sqlite3.Connection, **__) -> bool:
+async def leaderboards(message: discord.Message, db: sqlite3.Connection, client: discord.Client, **__) -> bool:
     """
     :param message:
     :param db:
@@ -524,6 +527,16 @@ async def leaderboards(message: discord.Message, db: sqlite3.Connection, **__) -
     return True
 
 
+async def emote_source(message: discord.Message, db: sqlite3.Connection, client: discord.Client, **kwargs) -> bool:
+    print(message.content)
+
+    e = client.get_emoji(int(kwargs['id']))
+    if e is not None:
+        print('Guild: ' + e.guild)
+
+    return True
+
+
 def start_cubot():
     # global db, client
 
@@ -536,6 +549,16 @@ def start_cubot():
             command=profile_picture,
             usage='__author__ Usage: !profilepicture [@mention]',
             description='Displays profile picture of you or a mentioned user.'
+        )
+    )
+
+    client.addcom(
+        Command(
+            names=['emotesource', 'es'],
+            regexp=r'^__name__\s*<a?:(?P<name>[a-zA-Z0-9\_])+:(?P<id>[0-9]+)>$',
+            command=emote_source,
+            usage=f'__author__ Usage: !emotesource <emote>',
+            description='Gets emote'
         )
     )
 
@@ -583,7 +606,4 @@ def start_cubot():
 
 
 if __name__ == '__main__':
-    The_program_to_hide = win32gui.GetForegroundWindow()
-    win32gui.ShowWindow(The_program_to_hide, win32con.SW_HIDE)
-
     start_cubot()
