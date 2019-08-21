@@ -9,6 +9,7 @@ import discord
 import win32con
 import win32gui
 from c__lib.c__input import yes_no_input
+from c__lib.c__string import seconds_to_czech_string
 
 
 # todo: Clean up `db` mess.
@@ -162,6 +163,9 @@ class Command:
     def match(self, message: discord.Message):
         for name in self.names:
             if message.content.lower().startswith(self.cmd_char + name):
+                if len(message.content.lower()) > len(self.cmd_char + name):
+                    if not message.content.lower()[len(self.cmd_char + name)].isspace():
+                        continue
                 return True
         else:
             return False
@@ -527,12 +531,15 @@ async def leaderboards(message: discord.Message, db: sqlite3.Connection, client:
     return True
 
 
-async def emote_source(message: discord.Message, db: sqlite3.Connection, client: discord.Client, **kwargs) -> bool:
-    print(message.content)
+async def classic_release(message: discord.Message, db: sqlite3.Connection, client: discord.Client, **kwargs) -> bool:
 
-    e = client.get_emoji(int(kwargs['id']))
-    if e is not None:
-        print('Guild: ' + e.guild)
+    time_str = seconds_to_czech_string(
+        (
+            datetime.datetime(year=2019, month=8, day=27, hour=12, minute=00)
+            - datetime.datetime.now()
+        ).total_seconds())
+
+    await message.channel.send(f'Classic vyjde za {time_str}!')
 
     return True
 
@@ -549,16 +556,6 @@ def start_cubot():
             command=profile_picture,
             usage='__author__ Usage: !profilepicture [@mention]',
             description='Displays profile picture of you or a mentioned user.'
-        )
-    )
-
-    client.addcom(
-        Command(
-            names=['emotesource', 'es'],
-            regexp=r'^__name__\s*<a?:(?P<name>[a-zA-Z0-9\_])+:(?P<id>[0-9]+)>$',
-            command=emote_source,
-            usage=f'__author__ Usage: !emotesource <emote>',
-            description='Gets emote'
         )
     )
 
@@ -585,7 +582,7 @@ def start_cubot():
     client.addcom(
         Command(
             names=['currency', 'c'],
-            regexp=r'^__name__.*$',
+            regexp=r'^__name__( .*)?$',
             command=my_currency,
             usage=f'__author__ Usage: !currency',
             description='Displays your currency.'
@@ -595,10 +592,20 @@ def start_cubot():
     client.addcom(
         Command(
             names=['leaderboards', 'lb'],
-            regexp=r'^__name__.*$',
+            regexp=r'^__name__( .*)?$',
             command=leaderboards,
             usage=f'__author__ Usage: !leaderboards',
             description='Displays top 10 people ordered by their respective bounties.'
+        )
+    )
+
+    client.addcom(
+        Command(
+            names=['classic'],
+            regexp=r'^__name__( .*)?$',
+            command=classic_release,
+            usage=f'__author__ Usage: !classic',
+            description='Displays time to release of Classic WoW in czech language.'
         )
     )
 
