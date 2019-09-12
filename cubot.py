@@ -3,14 +3,11 @@ import datetime
 import os
 import re
 import sqlite3
-from typing import Coroutine
 
 import discord
-import win32con
-import win32gui
 from c__lib.c__input import yes_no_input
 from c__lib.c__string import seconds_to_czech_string
-
+from c__lib.c__string import money_string
 
 # todo: Clean up `db` mess.
 # todo: Use async wrapper for sqlite3.
@@ -516,18 +513,30 @@ async def leaderboards(message: discord.Message, db: sqlite3.Connection, client:
     c = db.cursor()
     c.execute('SELECT ID, CurrentPrize from Users WHERE CurrentPrize > 0 ORDER BY CurrentPrize desc')
 
-    table = 'Leaderboards:\n'
-
     i = 1
+
+    table = []
+
     for row in c.fetchall():
         member = message.guild.get_member(int(row[0]))
         if member is None:
             continue
         name = member.nick or member.display_name
-        table += f'{i:20}. {name}: {row[1]}:dollar:\n'
+
+        table.append((i, name, money_string(row[1])))
+
         i += 1
 
-    await message.channel.send(table)
+    pos_len = max([len(str(x)) for x, _, _ in table]) + 1
+    name_len = max([len(str(x)) for _, x, _ in table]) + 1
+    amount_len = max([len(str(x)) for _, _, x in table]) + 1
+
+    ret_str = 'Leaderboards:\n'
+
+    for pos, name, amount in table:
+        ret_str += f'`{pos:>{pos_len}}.` `{name + ":":<{name_len}}` `{amount:>{amount_len}}` :dollar:\n'
+
+    await message.channel.send(ret_str)
     return True
 
 
@@ -535,11 +544,10 @@ async def classic_release(message: discord.Message, db: sqlite3.Connection, clie
 
     time_str = seconds_to_czech_string(
         (
-            datetime.datetime(year=2019, month=8, day=27, hour=12, minute=00)
-            - datetime.datetime.now()
+            datetime.datetime.now() - datetime.datetime(year=2019, month=8, day=27, hour=00, minute=00)
         ).total_seconds())
 
-    await message.channel.send(f'Classic vyjde za {time_str}!')
+    await message.channel.send(f'Classic je venku už {time_str}!')
 
     return True
 
@@ -605,7 +613,7 @@ def start_cubot():
             regexp=r'^__name__( .*)?$',
             command=classic_release,
             usage=f'__author__ Usage: !classic',
-            description='Displays time to release of Classic WoW in czech language.'
+            description='Displays time since release of Classic WoW in czech language.'
         )
     )
 
