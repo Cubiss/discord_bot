@@ -21,6 +21,7 @@ epoch_time = datetime.datetime.utcfromtimestamp(0)
 class DbUser:
     id: int = 0
     Name: str = ''
+    ServerId: int = 0
     AvailableCurrency: int = 0
     CurrentPrize: int = 0
     LastRewardGivenDateTime: datetime.datetime = epoch_time
@@ -42,6 +43,7 @@ class DbUser:
         sql = 'SELECT ' \
               ' ID,' \
               ' Name,' \
+              ' ServerId,' \
               ' AvailableCurrency, ' \
               ' CurrentPrize, ' \
               ' LastRewardGivenDateTime, ' \
@@ -72,11 +74,12 @@ class DbUser:
         else:
             self.id = row[0]
             self.Name = row[1]
-            self.AvailableCurrency = row[2]
-            self.CurrentPrize = row[3]
-            self.LastRewardGivenDateTime = db_to_date(row[4])
-            self.LastRewardGainedDateTime = db_to_date(row[5])
-            self.LastCurrencyGainedDateTime = db_to_date(row[6])
+            self.ServerId = row [2]
+            self.AvailableCurrency = row[3]
+            self.CurrentPrize = row[4]
+            self.LastRewardGivenDateTime = db_to_date(row[5])
+            self.LastRewardGainedDateTime = db_to_date(row[6])
+            self.LastCurrencyGainedDateTime = db_to_date(row[7])
 
         self.loaded = True
 
@@ -360,10 +363,10 @@ class Cubot(discord.Client):
         await message.channel.send('Update finished.')
 
 
-def insert_member(db: sqlite3.Connection, member: discord.Member = None, user_id=None, db_users=None):
+def insert_member(db: sqlite3.Connection, member: discord.Member = None, server: discord.Guild = None, user_id=None, db_users=None):
     if db_users is None:
         c = db.cursor()
-        c.execute('SELECT ID, Name, AvailableCurrency, LastCurrencyGainedDateTime FROM Users')
+        c.execute('SELECT ID, Name, ServerId, AvailableCurrency, LastCurrencyGainedDateTime FROM Users')
         db_users = [DbUser(db, row=row) for row in c.fetchall()]
 
     if member is None and user_id is not None:
@@ -398,6 +401,7 @@ def db_to_date(string: str):
         raise
 
 #  ############################# COMMANDS #############################################################################
+
 
 async def add_bounty(message: discord.Message, db: sqlite3.Connection, client: discord.Client, **kwargs):
     """
@@ -502,11 +506,11 @@ async def my_currency(message: discord.Message, db: sqlite3.Connection, client: 
     return True
 
 
-async def leaderboards(message: discord.Message, db: sqlite3.Connection, client: discord.Client, **__) -> bool:
+async def leaderboards(message: discord.Message, db: sqlite3.Connection, client: discord.Client, **kwargs) -> bool:
     """
     :param message:
     :param db:
-    :param __: kwargs
+    :param kwargs:
     :return:
     """
 
@@ -551,6 +555,11 @@ async def classic_release(message: discord.Message, db: sqlite3.Connection, clie
 
     return True
 
+
+async def love(message: discord.Message, db: sqlite3.Connection, client: discord.Client, **kwargs) -> bool:
+    await message.channel.send(f'Miluje tě, jj')
+
+    return True
 
 def start_cubot():
     # global db, client
@@ -614,6 +623,16 @@ def start_cubot():
             command=classic_release,
             usage=f'__author__ Usage: !classic',
             description='Displays time since release of Classic WoW in czech language.'
+        )
+    )
+
+    client.addcom(
+        Command(
+            names=['love'],
+            regexp=r'^__name__( .*)?$',
+            command=love,
+            usage=f'__author__ Usage: !love',
+            description='Řekne jestli tě miluje.'
         )
     )
 
