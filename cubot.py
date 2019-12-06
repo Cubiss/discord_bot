@@ -3,8 +3,9 @@ import datetime
 import os
 import re
 import sqlite3
-
+import random
 import discord
+
 from c__lib.c__input import yes_no_input
 from c__lib.c__string import seconds_to_czech_string
 from c__lib.c__string import money_string
@@ -16,6 +17,33 @@ from c__lib.c__string import money_string
 # todo: Server unique currency amount?
 
 epoch_time = datetime.datetime.utcfromtimestamp(0)
+
+
+class Reactor:
+    class Reaction:
+        def __init__(self, user_id=0, user_name='', emote='', chance=0):
+            self.chance = chance
+            self.emote = emote
+            self.user_name = user_name
+            self.user_id = user_id
+
+    def __init__(self):
+        self.reaction_list = []
+
+    def load(self, db):
+        c = db.cursor()
+        c.execute('SELECT ID, USER_ID, USER_NAME, EMOTE, CHANCE from Reactor')
+
+        for row in c.fetchall():
+            self.reaction_list.append(
+                Reactor.Reaction(
+                    user_id=int(row[1]),
+                    user_name=str(row[2]),
+                    
+                )
+            )
+
+    pass
 
 
 class DbUser:
@@ -74,7 +102,7 @@ class DbUser:
         else:
             self.id = row[0]
             self.Name = row[1]
-            self.ServerId = row [2]
+            self.ServerId = row[2]
             self.AvailableCurrency = row[3]
             self.CurrentPrize = row[4]
             self.LastRewardGivenDateTime = db_to_date(row[5])
@@ -253,6 +281,15 @@ class Cubot(discord.Client):
         if message.content.startswith('!help'):
             return await self.help(message)
 
+        # todo: standardize
+        if message.author.nick == "blossom":
+            if random.randint(0, 100) < 10:
+                await message.add_reaction(emoji="blossom:652132199751221269")
+
+        elif message.author.id == 192023454864637952:
+            if random.randint(0, 100) < 5:
+                await message.add_reaction(emoji="snek:652139158097231872")
+
         for command in self.commands:
             if command.match(message):
                 try:
@@ -363,7 +400,8 @@ class Cubot(discord.Client):
         await message.channel.send('Update finished.')
 
 
-def insert_member(db: sqlite3.Connection, member: discord.Member = None, server: discord.Guild = None, user_id=None, db_users=None):
+def insert_member(db: sqlite3.Connection, member: discord.Member = None, server: discord.Guild = None, user_id=None,
+                  db_users=None):
     if db_users is None:
         c = db.cursor()
         c.execute('SELECT ID, Name, ServerId, AvailableCurrency, LastCurrencyGainedDateTime FROM Users')
@@ -399,6 +437,7 @@ def db_to_date(string: str):
         print(ex)
         print(string + '000')
         raise
+
 
 #  ############################# COMMANDS #############################################################################
 
@@ -545,10 +584,9 @@ async def leaderboards(message: discord.Message, db: sqlite3.Connection, client:
 
 
 async def classic_release(message: discord.Message, db: sqlite3.Connection, client: discord.Client, **kwargs) -> bool:
-
     time_str = seconds_to_czech_string(
         (
-            datetime.datetime.now() - datetime.datetime(year=2019, month=8, day=27, hour=00, minute=00)
+                datetime.datetime.now() - datetime.datetime(year=2019, month=8, day=27, hour=00, minute=00)
         ).total_seconds())
 
     await message.channel.send(f'Classic je venku už {time_str}!')
@@ -561,6 +599,24 @@ async def love(message: discord.Message, db: sqlite3.Connection, client: discord
 
     return True
 
+
+async def add_reactor(message: discord.Message, db: sqlite3.Connection, client: discord.Client, **kwargs) -> bool:
+    # await message.channel.send(f'Miluje tě, jj')
+
+    return True
+
+
+async def change_username(message: discord.Message, db: sqlite3.Connection, client: discord.Client, **kwargs) -> bool:
+    if message.author.id != 143768570747289600:
+        await message.channel.send(f'Only my rightful master can truly rename me!')
+
+    else:
+        await client.user.edit(username="Karel")
+        await message.channel.send(f'Yes, master.')
+
+    return True
+    
+    
 def start_cubot():
     # global db, client
 
@@ -636,8 +692,23 @@ def start_cubot():
         )
     )
 
+    client.addcom(
+        Command(
+            names=['change_username'],
+            regexp=r'^__name__ (?P<name>.*)$',
+            command=change_username,
+            usage=f'__author__ Usage: !change_username <username>',
+            description='Changes the bot''s username.'
+        )
+    )
+
     client.run(open('token', 'r').read())
 
 
 if __name__ == '__main__':
-    start_cubot()
+    try:
+        start_cubot()
+    except Exception as ex:
+        print("Fatal exception thrown:")
+        print(ex)
+        input()
