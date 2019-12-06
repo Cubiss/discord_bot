@@ -694,7 +694,7 @@ def start_cubot():
 
     client.addcom(
         Command(
-            names=['change_username'],
+            names=['change_username', 'cu'],
             regexp=r'^__name__ (?P<name>.*)$',
             command=change_username,
             usage=f'__author__ Usage: !change_username <username>',
