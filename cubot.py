@@ -6,8 +6,6 @@ import sqlite3
 from typing import Coroutine
 
 import discord
-import win32con
-import win32gui
 from c__lib.c__input import yes_no_input
 
 
@@ -397,6 +395,7 @@ def db_to_date(string: str):
         raise
 
 #  ############################# COMMANDS #############################################################################
+
 
 async def add_bounty(message: discord.Message, db: sqlite3.Connection, client: discord.Client, **kwargs):
     """
