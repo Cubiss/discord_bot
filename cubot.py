@@ -39,7 +39,7 @@ class Reactor:
                 Reactor.Reaction(
                     user_id=int(row[1]),
                     user_name=str(row[2]),
-                    
+                    emote=str(row[3])
                 )
             )
 
