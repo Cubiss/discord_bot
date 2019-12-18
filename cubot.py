@@ -5,6 +5,7 @@ import re
 import sqlite3
 import random
 import sys
+import builtins
 
 import discord
 
@@ -23,7 +24,7 @@ epoch_time = datetime.datetime.utcfromtimestamp(0)
 
 class Printer:
     def print(self, *args, **kwargs):
-        print(*args, **kwargs)
+        builtins.print(*args, **kwargs)
         sys.stdout.flush()
 
 
@@ -721,7 +722,6 @@ if __name__ == '__main__':
         print = p.print
         start_cubot()
     except Exception as exc:
-        import builtins
         builtins.print("Fatal exception thrown:")
         builtins.print(exc)
         input()
