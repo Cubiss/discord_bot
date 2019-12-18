@@ -4,6 +4,8 @@ import os
 import re
 import sqlite3
 import random
+import sys
+
 import discord
 
 from c__lib.c__input import yes_no_input
@@ -260,6 +262,7 @@ class Cubot(discord.Client):
         self.commands.append(command)
 
     async def on_ready(self):
+        print(datetime.datetime.now())
         print('Logged in as')
         print(self.user.name)
         print(self.user.id)
@@ -434,6 +437,7 @@ def db_to_date(string: str):
     try:
         return datetime.datetime.strptime(string + '000', '%Y-%m-%d %H:%M:%S.%f')
     except Exception as ex:
+        print(datetime.datetime.now())
         print(ex)
         print(string + '000')
         raise
@@ -707,6 +711,7 @@ def start_cubot():
 
 if __name__ == '__main__':
     try:
+        sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
         start_cubot()
     except Exception as ex:
         print("Fatal exception thrown:")
