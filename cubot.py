@@ -21,6 +21,12 @@ from c__lib.c__string import money_string
 epoch_time = datetime.datetime.utcfromtimestamp(0)
 
 
+class Printer:
+    def print(self, *args, **kwargs):
+        print(*args, **kwargs)
+        sys.stdout.flush()
+
+
 class Reactor:
     class Reaction:
         def __init__(self, user_id=0, user_name='', emote='', chance=0):
@@ -299,10 +305,10 @@ class Cubot(discord.Client):
                     await command.run(message, self)
                     if self.log_commands:
                         print(f'[{datetime.datetime.now()}][{message.guild.name}]{message.author}: {message.content}')
-                except Exception as ex:
+                except Exception:
                     print(message.author)
                     print(message.content)
-                    raise ex
+                    raise
 
     async def on_member_join(self, member: discord.Member):
         insert_member(self.database, member)
@@ -711,9 +717,11 @@ def start_cubot():
 
 if __name__ == '__main__':
     try:
-        sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+        p = Printer()
+        print = p.print
         start_cubot()
-    except Exception as ex:
-        print("Fatal exception thrown:")
-        print(ex)
+    except Exception as exc:
+        import builtins
+        builtins.print("Fatal exception thrown:")
+        builtins.print(exc)
         input()
