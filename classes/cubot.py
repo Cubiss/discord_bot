@@ -15,6 +15,7 @@ class Cubot(discord.Client):
     def __init__(self,
                  database=None,
                  log_commands=False,
+                 log_function=print,
                  *args, **kwargs):
         """
         Inits discord.Client and Cubot
@@ -39,7 +40,8 @@ class Cubot(discord.Client):
                 raise Exception('Database file not found.')
 
         self.log_commands = log_commands
-
+        self.log_function = log_function
+        
         self.reactor = Reactor(self.database)
 
         self.user_list = Users(self.database)
@@ -51,11 +53,11 @@ class Cubot(discord.Client):
         self.commands.append(command)
 
     async def on_ready(self):
-        print(datetime.datetime.now())
-        print('Logged in as')
-        print(self.user.name)
-        print(self.user.id)
-        print('------')
+        self.log_function(datetime.datetime.now())
+        self.log_function('Logged in as')
+        self.log_function(self.user.name)
+        self.log_function(self.user.id)
+        self.log_function('------')
 
     async def on_message(self, message: discord.Message):
         if message.author == self.user:
@@ -74,10 +76,10 @@ class Cubot(discord.Client):
                 try:
                     await command.run(message, self, self.user_list)
                     if self.log_commands:
-                        print(f'[{datetime.datetime.now()}][{message.guild.name}]{message.author}: {message.content}')
+                        self.log_function(f'[{datetime.datetime.now()}][{message.guild.name}]{message.author}: {message.content}')
                 except Exception:
-                    print(message.author)
-                    print(message.content)
+                    self.log_function(message.author)
+                    self.log_function(message.content)
                     raise
 
     async def help(self, message: discord.Message):
@@ -91,5 +93,5 @@ class Cubot(discord.Client):
 
         help_str += '```'
 
-        print(help_str)
+        self.log_function(help_str)
         await message.channel.send(help_str)

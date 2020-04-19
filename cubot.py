@@ -10,7 +10,7 @@ from c__lib.c__string import format_table
 from classes.reactor import Reaction
 from classes.command import Command
 from classes.cubot import Cubot
-from classes.printer import Printer
+from classes.logger import Logger
 
 #  ############################# COMMANDS #############################################################################
 
@@ -260,9 +260,9 @@ def run_bot(client: Cubot):
 
 if __name__ == '__main__':
     try:
-        printer = Printer('./log.log')
-        print = printer.print
-        bot = Cubot(log_commands=True)
+        printer = Logger('./log.log')
+        print = printer.log
+        bot = Cubot(log_commands=True, log_function=printer.log)
         run_bot(bot)
     except Exception as exc:
         builtins.print("Fatal exception thrown:")
