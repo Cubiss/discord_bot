@@ -10,4 +10,6 @@ class Printer:
         builtins.print(output, end=end)
         sys.stdout.flush()
         if self.log_file is not None:
-            open(self.log_file, 'a').write(str(output) + end)
+            f = open(self.log_file, 'a')
+            f.write(str(output) + end)
+            f.flush()
