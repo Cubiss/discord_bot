@@ -255,7 +255,7 @@ def add_commands(client: Cubot):
         )
     )
 
-    client.run(open('token', 'r').read())
+    client.run(open('token', 'r').read().strip())
 
 
 if __name__ == '__main__':
@@ -267,4 +267,3 @@ if __name__ == '__main__':
     except Exception as exc:
         builtins.print("Fatal exception thrown:")
         builtins.print(exc)
-        input()
