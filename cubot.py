@@ -160,7 +160,7 @@ async def change_username(message: discord.Message, db: sqlite3.Connection, clie
     return True
 
 
-def add_commands(client: Cubot):
+def run_bot(client: Cubot):
     client.addcom(
         Command(
             names=['profilepicture', 'profilepic', 'pp'],
@@ -263,7 +263,8 @@ if __name__ == '__main__':
         printer = Printer()
         print = printer.print
         bot = Cubot(log_commands=True)
-        add_commands(bot)
+        run_bot(bot)
     except Exception as exc:
         builtins.print("Fatal exception thrown:")
         builtins.print(exc)
+        exit(-1)
