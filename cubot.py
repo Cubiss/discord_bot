@@ -260,7 +260,7 @@ def run_bot(client: Cubot):
 
 if __name__ == '__main__':
     try:
-        printer = Logger('./log.log')
+        printer = Logger('./log.log', timestamps=True)
         print = printer.log
         bot = Cubot(log_commands=True, log_function=printer.log)
         run_bot(bot)
