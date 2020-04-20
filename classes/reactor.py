@@ -58,7 +58,7 @@ class Reactor:
                     user_name=str(row['USER_NAME']),
                     server_id=int(row['SERVER_ID']),
                     emote=str(row['EMOTE']),
-                    chance=int(row['CHANCE']),
+                    chance=float(row['CHANCE']),
                     enabled=int(row['ENABLED']) != 0,
                     cooldown=int(row['COOLDOWN']),
                     db_id=int(row['ID']),
