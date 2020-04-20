@@ -68,7 +68,7 @@ class Cubot(discord.Client):
 
         for e in self.reactor.get_reactions(message.author.id, message.guild.id):
             await message.add_reaction(emoji=e)
-        # todo: standardize
+            self.log_function(f"Adding reaction to {message.author.name}: {e}")
 
         command: Command
         for command in self.commands:
