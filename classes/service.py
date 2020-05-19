@@ -30,7 +30,7 @@ class Service:
         Returns dictionary of values returned by systemctl show call.
         :return: dict
         """
-        p = subprocess.check_output(['sudo', 'systemctl', 'show', self.name, '--no-page'])
+        p = subprocess.check_output(['systemctl', 'show', self.name, '--no-page'])
         stat = {}
         for line in p.decode('utf8').splitlines():
             key, value = line.split('=', 1)
@@ -39,7 +39,7 @@ class Service:
         return stat
 
     def status_string(self):
-        x = subprocess.check_output(['sudo', 'systemctl', 'status', self.name]).decode('utf8')\
+        x = subprocess.check_output(['systemctl', 'status', self.name]).decode('utf8')\
             .splitlines()[2].strip()
         self.log(f'{self.name} status string:\n{x}')
         return x
