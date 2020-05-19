@@ -49,7 +49,19 @@ class Cubot(discord.Client):
 
         super(Cubot, self).__init__(*args, **kwargs)
 
-    def addcom(self, command):
+    def addcom(self, command: Command):
+        names = []
+        for n in [cmd.names for cmd in self.commands]:
+            for name in n:
+                names.append(name)
+
+        for n in command.names:
+            if n in names:
+                raise Exception(f"Duplicate command name: {n}")
+            for name in names:
+                if name.startswith(n) or n.startswith(name):
+                    raise Exception(f"Incompatible command names: {n} - {name}")
+
         command.db = self.database
         self.commands.append(command)
 

@@ -347,7 +347,7 @@ def run_bot(client: Cubot):
 
     client.addcom(
         Command(
-            names=['minecraft', 'mc'],
+            names=['minecraft'],
             regexp=r'^__name__ (?P<name>)\s*$',
             command=minecraft,
             usage=f'__author__ Usage: !minecraft',
@@ -357,7 +357,7 @@ def run_bot(client: Cubot):
 
     client.addcom(
         Command(
-            names=['minecraft start', 'mc start'],
+            names=['mcserver start', 'mcs start'],
             regexp=r'^__name__ (?P<name>)\s*$',
             command=minecraft_start,
             usage=f'__author__ Usage: !minecraft start',
@@ -368,7 +368,7 @@ def run_bot(client: Cubot):
 
     client.addcom(
         Command(
-            names=['minecraft stop', 'mc stop'],
+            names=['mcserver stop', 'mcs stop'],
             regexp=r'^__name__ (?P<name>)\s*$',
             command=minecraft_stop,
             usage=f'__author__ Usage: !minecraft stop',
@@ -379,7 +379,7 @@ def run_bot(client: Cubot):
 
     client.addcom(
         Command(
-            names=['minecraft restart', 'mc restart'],
+            names=['mcserver restart', 'mcs restart'],
             regexp=r'^__name__ (?P<name>)\s*$',
             command=minecraft_restart,
             usage=f'__author__ Usage: !minecraft restart',
@@ -390,7 +390,7 @@ def run_bot(client: Cubot):
 
     client.addcom(
         Command(
-            names=['minecraft status', 'mc status'],
+            names=['mcserver status', 'mcs status'],
             regexp=r'^__name__ (?P<name>)\s*$',
             command=minecraft_status,
             usage=f'__author__ Usage: !minecraft start',
@@ -400,7 +400,7 @@ def run_bot(client: Cubot):
 
     client.addcom(
         Command(
-            names=['permissions', 'permission', 'p'],
+            names=['permissions', 'permission'],
             regexp=r'^__name__\s+(?P<command>add|remove|list)(\s+<@!?(?P<mention>\d*?)>)?(\s+(?P<permission>.*?))?$',
             command=permissions,
             usage=f'__author__ Usage: !minecraft start',
