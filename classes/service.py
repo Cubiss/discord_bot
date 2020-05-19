@@ -7,7 +7,8 @@ class Service:
     """
     # _status_time_format = '%a %Y-%m-%d %H:%M:%S %Z'
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, log=print):
+        self.log = log
         name = name.strip()
         if len(name) == 0:
             raise Exception('Service name must be specified.')
@@ -38,8 +39,12 @@ class Service:
         return stat
 
     def status_string(self):
-        return subprocess.check_output(['sudo', 'systemctl', 'status', self.name]).decode('utf8')\
+        x = subprocess.check_output(['sudo', 'systemctl', 'status', self.name]).decode('utf8')\
             .splitlines()[2].strip()
+        self.log(f'{self.name} status string:\n{x}')
+        return x
 
     def is_running(self):
-        return self._status()['ActiveState'] == 'active'
+        status = self._status()['ActiveState']
+        self.log(f'{self.name} ActiveState: {status}')
+        return status == 'active'
