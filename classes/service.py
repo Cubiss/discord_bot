@@ -42,4 +42,4 @@ class Service:
             .splitlines()[2].strip()
 
     def is_running(self):
-        return self._status()['ActiveStatus'] == 'active'
+        return self._status()['ActiveState'] == 'active'
