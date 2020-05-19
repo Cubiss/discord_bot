@@ -194,7 +194,7 @@ async def minecraft_start(message: discord.Message, **__) -> bool:
 
 async def minecraft_stop(message: discord.Message, **__) -> bool:
     s = Service('minecraft.service')
-    if not s.is_running():
+    if s.is_running():
         s.stop()
         await message.channel.send('Stopping minecraft server:\n' + s.status_string())
     else:
