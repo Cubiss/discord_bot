@@ -1,11 +1,20 @@
 import sqlite3
+import discord
 
 
 class User:
-    def __init__(self, user_id: int, user_name: str, db: sqlite3.Connection):
+    def __init__(self,
+                 db: sqlite3.Connection,
+                 user_id: int = None,
+                 user_name: str = None,
+                 user: discord.User = None):
         self.db = db
-        self.id = user_id
-        self.name = user_name
+
+        if user_id is None and user is None:
+            raise Exception("Either user_id or user must be set.")
+
+        self.id = user_id or user.id
+        self.name = user_name or user.display_name
         self.permissions = []
 
     def save(self):
@@ -33,9 +42,33 @@ class Users:
         if not self.table_exists():
             self.create_table()
 
-        self.user_list = []
+        if not self.permissions_table_exists():
+            self.create_permissions_table()
+
+        self._users = {}
         self.load()
         pass
+
+    def __getitem__(self, user_id: int):
+        if user_id in self._users:
+            return self._users[user_id]
+        else:
+            return None
+
+    def __setitem__(self, user_id: int, user: User):
+        if user_id in self._users:
+            raise KeyError("User already exists!")
+        else:
+            self._users[user_id](user)
+
+    def get_or_create(self, user):
+        assert(isinstance(user, discord.User) or isinstance(user, discord.Member))
+        if u := self._users[user.id] is None:
+            u = User(db=self.db, user=user)
+            self._users[u.id] = u
+            u.save()
+
+        return u
 
     def load(self):
         c = self.db.cursor()
@@ -47,9 +80,10 @@ class Users:
         c.row_factory = sqlite3.Row
 
         for row in c.fetchall():
-            self.user_list.append(
+            user_id = int(row['USER_ID'])
+            self[user_id](
                 User(
-                    user_id=int(row['USER_ID']),
+                    user_id=user_id,
                     user_name=str(row['USER_NAME']),
                     db=self.db
                 )
@@ -60,11 +94,11 @@ class Users:
                   ' USER_ID, '
                   ' PERMISSION_ID '
                   'from '
-                  ' Users')
+                  ' Permissions')
         c.row_factory = sqlite3.Row
 
         for row in c.fetchall():
-            for u in [u for u in self.user_list if u.id == int(row['USER_ID'])]:
+            if u := self[int(row['USER_ID'])] is not None:
                 u.permissions.append(row['PERMISSION_ID'])
 
     def table_exists(self):
@@ -74,6 +108,7 @@ class Users:
             "WHERE type='table' and name = 'Users'"
             "ORDER BY name ;"
         )
+
         return len(c.fetchall()) > 0
 
     def create_table(self):
@@ -82,8 +117,27 @@ class Users:
             '''CREATE TABLE "Users" (
                 "USER_ID"	INTEGER NOT NULL,
                 "USER_NAME"	TEXT,
-                "ACCESS_LEVEL"	INTEGER NOT NULL,
                 PRIMARY KEY("USER_ID")
+            );'''
+        )
+        self.db.commit()
+
+    def permissions_table_exists(self):
+        c = self.db.cursor()
+        c.execute(
+            "SELECT name FROM sqlite_master "
+            "WHERE type='table' and name = 'Permissions'"
+            "ORDER BY name ;"
+        )
+        return len(c.fetchall()) > 0
+
+    def create_permissions_table(self):
+        c: sqlite3.Cursor = self.db.cursor()
+        c.execute(
+            '''CREATE TABLE "Users" (
+                "USER_ID"	INTEGER NOT NULL,
+                "PERMISSION_ID"	TEXT,
+                PRIMARY KEY("USER_ID", "PERMISSION_ID")
             );'''
         )
         self.db.commit()

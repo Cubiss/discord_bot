@@ -1,10 +1,16 @@
 import re
 
-from classes.users import User, Users
+from classes.users import Users
 import discord
 
 
 class Command:
+    # arguments passed to command function
+    # message: discord.Message to which the command is reacting
+    # db: database assigned to the bot
+    # client: reference to Cubot
+    command_parameters = ['message', 'db', 'client']
+
     def __init__(
             self,
             names: list,
@@ -18,10 +24,8 @@ class Command:
         Creates a command.
         :param names: Aliases of the command. First name is
         :param regexp: regex representation of messages that can be processed with this command
-        :param command: coroutine(message: discord.Message, db: sqlite3.Connection, **kwargs) -> bool:
-                        message is message object that command will react to,
-                        db is connection to a database
-                        kwargs are arguments parsed from regexp groups
+        :param command: coroutine(**kwargs) -> bool:
+                        kwargs: arguments parsed from regexp groups + Command.command_parameters
         :param usage: String showing how the command should be called.
         :param description: String saying what command should do.
         :param cmd_char: String every command will start with.
@@ -31,6 +35,13 @@ class Command:
         self.names = names
         self.command = command
         self.re_list = [re.compile(regexp.replace('__name__', cmd_char + name)) for name in names]
+
+        # check if regex contains invalid groups
+        for r in self.re_list:
+            for group_name in r.groupindex:
+                if group_name in Command.command_parameters:
+                    raise Exception(f"Wrong command regexp: group name '{group_name}' is reserved.")
+
         self.usage = usage or f'Command is in wrong format: {self.re_list[0].pattern}'
         self.description = description
         if permissions is None:
@@ -52,14 +63,16 @@ class Command:
     def run(self, message: discord.Message, client: discord.Client, users: Users):
         # check access
         if self.permissions is not None:
-            for user in [u for u in users.user_list if u.id == message.author.id]:
-                if any(permission in user.permissions for permission in self.permissions) \
-                        or 'admin' in user.permissions:
-                    # user has appropriate permission
-                    break
+            u = users[message.author.id]
+            if u is not None and \
+               ('admin' in u.permissions or any(p in u.permissions for p in self.permissions)):
+                # user has an appropriate permission
+                pass
             else:
                 # user cannot use this command
-                return message.channel.send(self.format_message(message=message, string="__author__ you can't do that!"))
+                return message.channel.send(
+                    self.format_message(
+                        message=message, string="__author__ you can't do that!"))
 
         # get regex parsed arguments
         for regex in self.re_list:
@@ -70,8 +83,18 @@ class Command:
             # no regex match found, return a usage message
             return message.channel.send(self.format_message(message=message, string=self.usage))
 
+        # parse arguments for the command function
+
+        params = {
+            'message': message,
+            'db': self.db,
+            'client': client,
+        }
+
+        params.update(match.groupdict())
+
         # finally run the command code
-        return self.command(message, self.db, client, **match.groupdict())
+        return self.command(**params)
 
     def format_message(self, string: str, message: discord.Message):
         string = string.replace('__name__', self.names[0])

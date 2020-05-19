@@ -1,5 +1,4 @@
 import datetime
-import sqlite3
 import builtins
 import traceback
 
@@ -17,16 +16,14 @@ from classes.service import Service
 #  ############################# COMMANDS #############################################################################
 
 
-async def test(message: discord.Message, __: sqlite3.Connection, client: Cubot, **kwargs):
-    print(message.content)
+async def test(message: discord.Message, **__):
+    log(message.content)
     pass
 
 
-async def profile_picture(message: discord.Message, __: sqlite3.Connection, client: Cubot, **kwargs):
+async def profile_picture(message: discord.Message, **kwargs):
     """
     Displays full sized profile picture of either user or a mentioned member.
-    :param client:
-    :param __:
     :param message:
     :param kwargs:
     :return:
@@ -49,11 +46,9 @@ async def profile_picture(message: discord.Message, __: sqlite3.Connection, clie
     return True
 
 
-async def get_user_id(message: discord.Message, __: sqlite3.Connection, client: Cubot, **kwargs):
+async def get_user_id(message: discord.Message, **kwargs):
     """
     Displays full sized profile picture of either user or a mentioned member.
-    :param client:
-    :param __:
     :param message:
     :param kwargs:
     :return:
@@ -69,7 +64,7 @@ async def get_user_id(message: discord.Message, __: sqlite3.Connection, client: 
     return True
 
 
-async def classic_release(message: discord.Message, db: sqlite3.Connection, client: Cubot, **kwargs) -> bool:
+async def classic_release(message: discord.Message, **__) -> bool:
     time_str = seconds_to_czech_string(
         (
                 datetime.datetime.now() - datetime.datetime(year=2019, month=8, day=27, hour=00, minute=00)
@@ -80,13 +75,13 @@ async def classic_release(message: discord.Message, db: sqlite3.Connection, clie
     return True
 
 
-async def love(message: discord.Message, db: sqlite3.Connection, client: Cubot, **kwargs) -> bool:
+async def love(message: discord.Message, **__) -> bool:
     await message.channel.send(f'Miluje tě, jj')
 
     return True
 
 
-async def add_reactor(message: discord.Message, db: sqlite3.Connection, client: Cubot, **kwargs) -> bool:
+async def add_reactor(message: discord.Message, client: Cubot, **kwargs) -> bool:
     if len(message.mentions) == 0:
         await message.channel.send(f'{message.author.mention} you didn\'t mention anyone!')
         return False
@@ -105,7 +100,8 @@ async def add_reactor(message: discord.Message, db: sqlite3.Connection, client: 
     else:
         chance = float(chance)
 
-    await message.channel.send(f'{message.author.mention} added a {emote} reactor to {target.mention}  with a chance of {chance * 100}% and cooldown of {cooldown} seconds.')
+    await message.channel.send(f'{message.author.mention} added a {emote} reactor to {target.mention}'
+                               f' with a chance of {chance * 100}% and cooldown of {cooldown} seconds.')
 
     client.reactor.add(
         Reaction(
@@ -121,22 +117,21 @@ async def add_reactor(message: discord.Message, db: sqlite3.Connection, client: 
     return True
 
 
-async def remove_reactor(message: discord.Message, db: sqlite3.Connection, client: Cubot, **kwargs) -> bool:
-    id: int
+async def remove_reactor(message: discord.Message, client: Cubot, **kwargs) -> bool:
     try:
-        id = int(kwargs['id'])
-    except Exception as ex:
+        reactor_id = int(kwargs['id'])
+    except ValueError:
         await message.channel.send(f'{message.author.mention} specify which one!')
         return False
 
-    removed = client.reactor.remove(id)
+    removed = client.reactor.remove(reactor_id)
 
     await message.channel.send(f'{message.author.mention} removed {removed} reactors.')
 
     return True
 
 
-async def list_reactors(message: discord.Message, db: sqlite3.Connection, client: Cubot, **kwargs) -> bool:
+async def list_reactors(message: discord.Message, client: Cubot, **__) -> bool:
     table = []
 
     for r in client.reactor.reaction_list:
@@ -152,25 +147,24 @@ async def list_reactors(message: discord.Message, db: sqlite3.Connection, client
 
     return True
 
-    # await message.channel.send(f'Adding {emote} reactor to {target.mention}  with a chance of {chance*100}%')
 
-
-async def change_username(message: discord.Message, db: sqlite3.Connection, client: Cubot, **kwargs) -> bool:
+async def change_username(message: discord.Message, client: Cubot, **__) -> bool:
     await client.user.edit(username="Karel")
     await message.channel.send(f'Yes, master.')
 
     return True
 
 
-async def minecraft(message: discord.Message, db: sqlite3.Connection, client: Cubot, **kwargs) -> bool:
+async def minecraft(message: discord.Message, **__) -> bool:
     s = Service('minecraft.service')
     running = True
     status = ''
     address = 'firefly.danol.cz'
+    from subprocess import CalledProcessError
     try:
         running = s.is_running()
         status = s.status_string()
-    except:
+    except CalledProcessError:
         pass
 
     if running:
@@ -182,13 +176,13 @@ async def minecraft(message: discord.Message, db: sqlite3.Connection, client: Cu
     return True
 
 
-async def minecraft_status(message: discord.Message, db: sqlite3.Connection, client: Cubot, **kwargs) -> bool:
+async def minecraft_status(message: discord.Message, **__) -> bool:
     s = Service('minecraft.service')
     await message.channel.send('Minecraft status:\n' + s.status_string())
     return True
 
 
-async def minecraft_start(message: discord.Message, db: sqlite3.Connection, client: Cubot, **kwargs) -> bool:
+async def minecraft_start(message: discord.Message, **__) -> bool:
     s = Service('minecraft.service')
     if s.is_running():
         await message.channel.send('Minecraft is already running:\n' + s.status_string())
@@ -198,7 +192,7 @@ async def minecraft_start(message: discord.Message, db: sqlite3.Connection, clie
     return True
 
 
-async def minecraft_stop(message: discord.Message, db: sqlite3.Connection, client: Cubot, **kwargs) -> bool:
+async def minecraft_stop(message: discord.Message, **__) -> bool:
     s = Service('minecraft.service')
     if not s.is_running():
         s.stop()
@@ -208,17 +202,49 @@ async def minecraft_stop(message: discord.Message, db: sqlite3.Connection, clien
     return True
 
 
-async def minecraft_restart(message: discord.Message, db: sqlite3.Connection, client: Cubot, **kwargs) -> bool:
+async def minecraft_restart(message: discord.Message, **__) -> bool:
     s = Service('minecraft.service')
     s.restart()
     await message.channel.send('Restarting minecraft server:\n' + s.status_string())
     return True
 
 
-async def permissions(message: discord.Message, db: sqlite3.Connection, client: Cubot, **kwargs) -> bool:
-    s = Service('minecraft.service')
-    s.restart()
-    await message.channel.send('Restarting minecraft server:\n' + s.status_string())
+async def permissions(message: discord.Message, client: Cubot, **kwargs) -> bool:
+    from classes.users import Users, User
+    cmd = kwargs['command']
+    mention: discord.Member
+    mention = message.mentions[0] if len(message.mentions) > 0 else None
+    permission = kwargs['permission']
+
+    u: User
+    ul: Users = client.user_list
+
+    if cmd == 'add':
+        u = ul.get_or_create(mention)
+        u.permissions.append(permission)
+        u.save()
+        await message.channel.send(f"Added '{permission}' permission to {mention.nick or mention.display_name}")
+    elif cmd == 'remove':
+        u = ul[mention.id]
+        if u is None or permission not in u.permissions:
+            await message.channel.send(f"{u.name} doesn't have '{permission}' permission.")
+        else:
+            u.permissions.remove(permission)
+            u.save()
+            await message.channel.send(f"Removed '{permission}' permission from {mention.nick or mention.display_name}")
+    elif cmd == 'list':
+        if mention is not None:
+            u = ul[mention.id]
+            if u is None or len(u.permissions) == 0:
+                await message.channel.send(f"{mention.nick or mention.display_name} has no pe")
+            else:
+                await message.channel.send(f"{mention.nick or mention.display_name}'s permissions:\n"
+                                           f"{', '.join(u.permissions)}")
+
+        pass
+    else:
+        await message.channel.send(f"Wrong command: '{cmd}'. Only one of following is available: add, remove, list")
+
     return True
 
 
@@ -247,9 +273,10 @@ def run_bot(client: Cubot):
     client.addcom(
         Command(
             names=['addreactor'],
-            regexp=r'^__name__\s*(?P<mention><@.*>)\s*(?P<emote><.*?>)\s*(?P<percentage>\d?\.?\d+%?)\s*(?P<cooldown>\d*)\s*(?P<server>-server)?$',
+            regexp=r'^__name__\s*(?P<mention><@.*>)\s*(?P<emote><.*?>)'
+                   r'\s*(?P<percentage>\d?\.?\d+%?)\s*(?P<cooldown>\d*)\s*(?P<server>-server)?$',
             command=add_reactor,
-            usage='__author__ Usage: !addreaction <@mention> <emote> <chance> [-server]',
+            usage='__author__ Usage: !addreactor <@mention> <emote> <chance> [-server]',
             description='Adds reactor.)',
             permissions=['reactors']
         )
@@ -280,9 +307,9 @@ def run_bot(client: Cubot):
     client.addcom(
         Command(
             names=['get_id'],
-            regexp=r'^__name__(\s*<@!?(?P<mention>\d*?)>)?$',
+            regexp=r'^__name__(\s+<@!?(?P<mention>\d*?)>)?$',
             command=get_user_id,
-            usage='__author__ Usage: !get_id [@mention]',
+            usage='__author__ Usage: !permission <add|remove|list> [@mention] [permission_name]',
             description='Displays discord id of mentioned user. (For devs mainly.)'
         )
     )
@@ -367,17 +394,17 @@ def run_bot(client: Cubot):
             regexp=r'^__name__ (?P<name>)\s*$',
             command=minecraft_status,
             usage=f'__author__ Usage: !minecraft start',
-            description='Changes the bot''s username.'
+            description='Changes the bot\'s username.'
         )
     )
 
     client.addcom(
         Command(
             names=['permissions', 'permission', 'p'],
-            regexp=r'^__name__ (?P<name>)\s*$',
-            command=minecraft_status,
+            regexp=r'^__name__\s+(?P<command>add|remove|list)(\s+<@!?(?P<mention>\d*?)>)?(\s+(?P<permission>.*?))?$',
+            command=permissions,
             usage=f'__author__ Usage: !minecraft start',
-            description='Changes the bot''s username.'
+            description='Change permissions.'
         )
     )
 
@@ -387,14 +414,14 @@ def run_bot(client: Cubot):
 if __name__ == '__main__':
     try:
         printer = Logger('./log.log', timestamps=True)
-        print = printer.log
+        log = printer.log
         bot = Cubot(log_commands=True, log_function=printer.log)
         run_bot(bot)
     except Exception as exc:
         builtins.print("Fatal exception thrown:")
         builtins.print(exc)
 
-        tb = traceback.format_tb(exc.__traceback__)
+        tb = '\n'.join(traceback.format_tb(exc.__traceback__))
 
         builtins.print(tb)
 

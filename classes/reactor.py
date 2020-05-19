@@ -103,8 +103,8 @@ class Reactor:
             '); '
         )
 
-    def remove(self, id: int):
-        reactors = [r for r in self.reaction_list if r.id == id]
+    def remove(self, reactor_id: int):
+        reactors = [r for r in self.reaction_list if r.id == reactor_id]
         for r in reactors:
             r.remove(self.db)
             self.reaction_list.remove(r)

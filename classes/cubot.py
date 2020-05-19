@@ -2,7 +2,6 @@ import discord
 import datetime
 import sqlite3
 import os
-import traceback
 
 from c__lib.c__input import yes_no_input
 
@@ -78,10 +77,14 @@ class Cubot(discord.Client):
                 try:
                     await command.run(message, self, self.user_list)
                     if self.log_commands:
-                        self.log_function(f'[{datetime.datetime.now()}][{message.guild.name}]{message.author}: {message.content}')
+                        self.log_function(f'[{datetime.datetime.now()}]'
+                                          f'[{message.guild.name}]'
+                                          f'{message.author}: '
+                                          f'{message.content}')
                 except Exception as ex:
                     self.log_function(message.author)
                     self.log_function(message.content)
+                    self.log_function(ex)
                     raise
 
     async def help(self, message: discord.Message):
