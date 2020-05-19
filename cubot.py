@@ -171,7 +171,7 @@ async def minecraft(message: discord.Message, **__) -> bool:
         await message.channel.send(f'Minecraft server is running on {address}:\n{status})')
     else:
         await message.channel.send(f'Minecraft server is not running. Use "!mcserver start" to start it.\n'
-                                   f'It will run on {address}.)')
+                                   f'It will run on {address}.')
 
     return True
 
