@@ -59,10 +59,10 @@ class Users:
         if user_id in self._users:
             raise KeyError("User already exists!")
         else:
-            self._users[user_id](user)
+            self._users[user_id] = user
 
     def get_or_create(self, user):
-        assert(isinstance(user, discord.User) or isinstance(user, discord.Member))
+        assert (isinstance(user, discord.User) or isinstance(user, discord.Member))
         u = self._users[user.id]
         if u is None:
             u = User(db=self.db, user=user)
@@ -82,12 +82,10 @@ class Users:
 
         for row in c.fetchall():
             user_id = int(row['USER_ID'])
-            self[user_id](
-                User(
-                    user_id=user_id,
-                    user_name=str(row['USER_NAME']),
-                    db=self.db
-                )
+            self[user_id] = User(
+                user_id=user_id,
+                user_name=str(row['USER_NAME']),
+                db=self.db
             )
 
         c = self.db.cursor()
