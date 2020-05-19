@@ -63,7 +63,8 @@ class Users:
 
     def get_or_create(self, user):
         assert(isinstance(user, discord.User) or isinstance(user, discord.Member))
-        if u := self._users[user.id] is None:
+        u = self._users[user.id]
+        if u is None:
             u = User(db=self.db, user=user)
             self._users[u.id] = u
             u.save()
@@ -98,7 +99,8 @@ class Users:
         c.row_factory = sqlite3.Row
 
         for row in c.fetchall():
-            if u := self[int(row['USER_ID'])] is not None:
+            u = self[int(row['USER_ID'])]
+            if u is not None:
                 u.permissions.append(row['PERMISSION_ID'])
 
     def table_exists(self):
