@@ -170,7 +170,7 @@ async def minecraft(message: discord.Message, **__) -> bool:
     if running:
         await message.channel.send(f'Minecraft server is running on {address}:\n{status})')
     else:
-        await message.channel.send(f'Minecraft server is not running. Use "!minecraft start" to start it.\n'
+        await message.channel.send(f'Minecraft server is not running. Use "!mcserver start" to start it.\n'
                                    f'It will run on {address}.)')
 
     return True
@@ -348,7 +348,7 @@ def run_bot(client: Cubot):
     client.addcom(
         Command(
             names=['minecraft'],
-            regexp=r'^__name__ (?P<name>)\s*$',
+            regexp=r'^__name__\s*$',
             command=minecraft,
             usage=f'__author__ Usage: !minecraft',
             description='Displays minecraft server\'s address.'
@@ -360,7 +360,7 @@ def run_bot(client: Cubot):
             names=['mcserver start', 'mcs start'],
             regexp=r'^__name__ (?P<name>)\s*$',
             command=minecraft_start,
-            usage=f'__author__ Usage: !minecraft start',
+            usage=f'__author__ Usage: !mcserver start',
             description='Starts the minecraft server.',
             # permissions=['minecraft']
         )
@@ -371,7 +371,7 @@ def run_bot(client: Cubot):
             names=['mcserver stop', 'mcs stop'],
             regexp=r'^__name__ (?P<name>)\s*$',
             command=minecraft_stop,
-            usage=f'__author__ Usage: !minecraft stop',
+            usage=f'__author__ Usage: !mcserver stop',
             description='Changes the bot''s username.',
             permissions=['minecraft']
         )
@@ -382,7 +382,7 @@ def run_bot(client: Cubot):
             names=['mcserver restart', 'mcs restart'],
             regexp=r'^__name__ (?P<name>)\s*$',
             command=minecraft_restart,
-            usage=f'__author__ Usage: !minecraft restart',
+            usage=f'__author__ Usage: !mcserver restart',
             description='Changes the bot''s username.',
             permissions=['minecraft']
         )
@@ -393,7 +393,7 @@ def run_bot(client: Cubot):
             names=['mcserver status', 'mcs status'],
             regexp=r'^__name__ (?P<name>)\s*$',
             command=minecraft_status,
-            usage=f'__author__ Usage: !minecraft start',
+            usage=f'__author__ Usage: !mcserver start',
             description='Changes the bot\'s username.'
         )
     )
