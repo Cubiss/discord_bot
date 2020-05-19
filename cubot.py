@@ -1,6 +1,7 @@
 import datetime
 import sqlite3
 import builtins
+import traceback
 
 import discord
 
@@ -11,6 +12,7 @@ from classes.reactor import Reaction
 from classes.command import Command
 from classes.cubot import Cubot
 from classes.logger import Logger
+from classes.service import Service
 
 #  ############################# COMMANDS #############################################################################
 
@@ -160,6 +162,66 @@ async def change_username(message: discord.Message, db: sqlite3.Connection, clie
     return True
 
 
+async def minecraft(message: discord.Message, db: sqlite3.Connection, client: Cubot, **kwargs) -> bool:
+    s = Service('minecraft.service')
+    running = True
+    status = ''
+    address = 'firefly.danol.cz'
+    try:
+        running = s.is_running()
+        status = s.status_string()
+    except:
+        pass
+
+    if running:
+        await message.channel.send(f'Minecraft server is running on {address}:\n{status})')
+    else:
+        await message.channel.send(f'Minecraft server is not running. Use "!minecraft start" to start it.\n'
+                                   f'It will run on {address}.)')
+
+    return True
+
+
+async def minecraft_status(message: discord.Message, db: sqlite3.Connection, client: Cubot, **kwargs) -> bool:
+    s = Service('minecraft.service')
+    await message.channel.send('Minecraft status:\n' + s.status_string())
+    return True
+
+
+async def minecraft_start(message: discord.Message, db: sqlite3.Connection, client: Cubot, **kwargs) -> bool:
+    s = Service('minecraft.service')
+    if s.is_running():
+        await message.channel.send('Minecraft is already running:\n' + s.status_string())
+    else:
+        s.start()
+        await message.channel.send('Minecraft status:\n' + s.status_string())
+    return True
+
+
+async def minecraft_stop(message: discord.Message, db: sqlite3.Connection, client: Cubot, **kwargs) -> bool:
+    s = Service('minecraft.service')
+    if not s.is_running():
+        s.stop()
+        await message.channel.send('Stopping minecraft server:\n' + s.status_string())
+    else:
+        await message.channel.send('Minecraft server is not running:\n' + s.status_string())
+    return True
+
+
+async def minecraft_restart(message: discord.Message, db: sqlite3.Connection, client: Cubot, **kwargs) -> bool:
+    s = Service('minecraft.service')
+    s.restart()
+    await message.channel.send('Restarting minecraft server:\n' + s.status_string())
+    return True
+
+
+async def permissions(message: discord.Message, db: sqlite3.Connection, client: Cubot, **kwargs) -> bool:
+    s = Service('minecraft.service')
+    s.restart()
+    await message.channel.send('Restarting minecraft server:\n' + s.status_string())
+    return True
+
+
 def run_bot(client: Cubot):
     client.addcom(
         Command(
@@ -178,7 +240,7 @@ def run_bot(client: Cubot):
             command=test,
             usage='__author__ Usage: !profilepicture [@mention]',
             description='Test command.',
-            access_level=5
+            permissions=['admin']
         )
     )
 
@@ -189,7 +251,7 @@ def run_bot(client: Cubot):
             command=add_reactor,
             usage='__author__ Usage: !addreaction <@mention> <emote> <chance> [-server]',
             description='Adds reactor.)',
-            access_level=5
+            permissions=['reactors']
         )
     )
 
@@ -200,7 +262,7 @@ def run_bot(client: Cubot):
             command=list_reactors,
             usage=f'__author__ Usage: !listreactors',
             description='Lists all reactors relevant to this server.',
-            access_level=5
+            permissions=['reactors']
         )
     )
 
@@ -210,7 +272,8 @@ def run_bot(client: Cubot):
             regexp=r'^__name__\s*(?P<id>\d*)\s*$',
             command=remove_reactor,
             usage=f'__author__ Usage: !removereactor <id>',
-            description='Removes a reactor.'
+            description='Removes a reactor.',
+            permissions=['reactors']
         )
     )
 
@@ -251,7 +314,70 @@ def run_bot(client: Cubot):
             command=change_username,
             usage=f'__author__ Usage: !change_username <username>',
             description='Changes the bot''s username.',
-            access_level=9
+            permissions=['admin']
+        )
+    )
+
+    client.addcom(
+        Command(
+            names=['minecraft', 'mc'],
+            regexp=r'^__name__ (?P<name>)\s*$',
+            command=minecraft,
+            usage=f'__author__ Usage: !minecraft',
+            description='Displays minecraft server\'s address.'
+        )
+    )
+
+    client.addcom(
+        Command(
+            names=['minecraft start', 'mc start'],
+            regexp=r'^__name__ (?P<name>)\s*$',
+            command=minecraft_start,
+            usage=f'__author__ Usage: !minecraft start',
+            description='Starts the minecraft server.',
+            # permissions=['minecraft']
+        )
+    )
+
+    client.addcom(
+        Command(
+            names=['minecraft stop', 'mc stop'],
+            regexp=r'^__name__ (?P<name>)\s*$',
+            command=minecraft_stop,
+            usage=f'__author__ Usage: !minecraft stop',
+            description='Changes the bot''s username.',
+            permissions=['minecraft']
+        )
+    )
+
+    client.addcom(
+        Command(
+            names=['minecraft restart', 'mc restart'],
+            regexp=r'^__name__ (?P<name>)\s*$',
+            command=minecraft_restart,
+            usage=f'__author__ Usage: !minecraft restart',
+            description='Changes the bot''s username.',
+            permissions=['minecraft']
+        )
+    )
+
+    client.addcom(
+        Command(
+            names=['minecraft status', 'mc status'],
+            regexp=r'^__name__ (?P<name>)\s*$',
+            command=minecraft_status,
+            usage=f'__author__ Usage: !minecraft start',
+            description='Changes the bot''s username.'
+        )
+    )
+
+    client.addcom(
+        Command(
+            names=['permissions', 'permission', 'p'],
+            regexp=r'^__name__ (?P<name>)\s*$',
+            command=minecraft_status,
+            usage=f'__author__ Usage: !minecraft start',
+            description='Changes the bot''s username.'
         )
     )
 
@@ -267,4 +393,9 @@ if __name__ == '__main__':
     except Exception as exc:
         builtins.print("Fatal exception thrown:")
         builtins.print(exc)
+
+        tb = traceback.format_tb(exc.__traceback__)
+
+        builtins.print(tb)
+
         exit(-1)

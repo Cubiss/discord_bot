@@ -13,7 +13,7 @@ class Command:
             usage=None,
             description='',
             cmd_char='!',
-            access_level=1):
+            permissions: list = None):
         """
         Creates a command.
         :param names: Aliases of the command. First name is
@@ -33,7 +33,11 @@ class Command:
         self.re_list = [re.compile(regexp.replace('__name__', cmd_char + name)) for name in names]
         self.usage = usage or f'Command is in wrong format: {self.re_list[0].pattern}'
         self.description = description
-        self.access_level = access_level
+        if permissions is None:
+            permissions = []
+        if type(permissions) == str:
+            permissions = [permissions]
+        self.permissions = permissions
 
     def can_run(self, message: discord.Message):
         for name in self.names:
@@ -47,11 +51,11 @@ class Command:
 
     def run(self, message: discord.Message, client: discord.Client, users: Users):
         # check access
-        if self.access_level > 1:
-            u: User
+        if self.permissions is not None:
             for user in [u for u in users.user_list if u.id == message.author.id]:
-                if user.access_level.level >= self.access_level:
-                    # user has appropriate access level
+                if any(permission in user.permissions for permission in self.permissions) \
+                        or 'admin' in user.permissions:
+                    # user has appropriate permission
                     break
             else:
                 # user cannot use this command

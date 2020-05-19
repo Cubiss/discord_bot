@@ -1,13 +1,29 @@
 import sqlite3
 
-from classes.accesslevels import AccessLevel
-
 
 class User:
-    def __init__(self, user_id: int, user_name: str, access_level: AccessLevel):
+    def __init__(self, user_id: int, user_name: str, db: sqlite3.Connection):
+        self.db = db
         self.id = user_id
         self.name = user_name
-        self.access_level = access_level
+        self.permissions = []
+
+    def save(self):
+        c = self.db.cursor()
+
+        c.execute(f"INSERT INTO Users (USER_ID, USER_NAME) VALUES ({self.id}, '{self.name}') "
+                  f"ON CONFLICT(USER_ID) DO "
+                  f"UPDATE SET USER_ID={self.id}, USER_NAME='{self.name}'")
+
+        for p in self.permissions:
+            c.execute(f"INSERT INTO Permissions(USER_ID, PERMISSION_ID) VALUES ({self.id}, '{p}') "
+                      f"ON CONFLICT(USER_ID, PERMISSION_ID) DO NOTHING ")
+
+    def remove(self):
+        c = self.db.cursor()
+
+        c.execute(f"DELETE FROM Users WHERE USER_ID = '{self.id}'")
+        c.execute(f"DELETE FROM Permissions WHERE USER_ID = '{self.id}'")
 
 
 class Users:
@@ -25,11 +41,9 @@ class Users:
         c = self.db.cursor()
         c.execute('select '
                   ' USER_ID, '
-                  ' USER_NAME, '
-                  ' Users.ACCESS_LEVEL as ACCESS_LEVEL, '
-                  ' AccessLevels.Name as ACCESS_LEVEL_NAME '
+                  ' USER_NAME '
                   'from '
-                  ' Users join AccessLevels on Users.ACCESS_LEVEL = AccessLevels.ACCESS_LEVEL')
+                  ' Users')
         c.row_factory = sqlite3.Row
 
         for row in c.fetchall():
@@ -37,12 +51,21 @@ class Users:
                 User(
                     user_id=int(row['USER_ID']),
                     user_name=str(row['USER_NAME']),
-                    access_level=AccessLevel(
-                        level=int(row['ACCESS_LEVEL']),
-                        name=str(row['ACCESS_LEVEL_NAME'])
-                    )
+                    db=self.db
                 )
             )
+
+        c = self.db.cursor()
+        c.execute('select '
+                  ' USER_ID, '
+                  ' PERMISSION_ID '
+                  'from '
+                  ' Users')
+        c.row_factory = sqlite3.Row
+
+        for row in c.fetchall():
+            for u in [u for u in self.user_list if u.id == int(row['USER_ID'])]:
+                u.permissions.append(row['PERMISSION_ID'])
 
     def table_exists(self):
         c = self.db.cursor()
