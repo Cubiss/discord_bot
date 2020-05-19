@@ -358,7 +358,7 @@ def run_bot(client: Cubot):
     client.addcom(
         Command(
             names=['mcserver start', 'mcs start'],
-            regexp=r'^__name__ (?P<name>)\s*$',
+            regexp=r'^__name__\s*$',
             command=minecraft_start,
             usage=f'__author__ Usage: !mcserver start',
             description='Starts the minecraft server.',
@@ -369,7 +369,7 @@ def run_bot(client: Cubot):
     client.addcom(
         Command(
             names=['mcserver stop', 'mcs stop'],
-            regexp=r'^__name__ (?P<name>)\s*$',
+            regexp=r'^__name__\s*$',
             command=minecraft_stop,
             usage=f'__author__ Usage: !mcserver stop',
             description='Changes the bot''s username.',
@@ -380,7 +380,7 @@ def run_bot(client: Cubot):
     client.addcom(
         Command(
             names=['mcserver restart', 'mcs restart'],
-            regexp=r'^__name__ (?P<name>)\s*$',
+            regexp=r'^__name__\s*$',
             command=minecraft_restart,
             usage=f'__author__ Usage: !mcserver restart',
             description='Changes the bot''s username.',
@@ -391,9 +391,9 @@ def run_bot(client: Cubot):
     client.addcom(
         Command(
             names=['mcserver status', 'mcs status'],
-            regexp=r'^__name__ (?P<name>)\s*$',
+            regexp=r'^__name__\s*$',
             command=minecraft_status,
-            usage=f'__author__ Usage: !mcserver start',
+            usage=f'__author__ Usage: !mcserver status',
             description='Changes the bot\'s username.'
         )
     )
