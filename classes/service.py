@@ -1,14 +1,31 @@
 import subprocess
+try:
+    import dbus
+except ImportError:
+    dbus = None
 
 
 class Service:
     """
     systemd service controller
     """
+
+    _unit_name = 'sshd.service'
     # _status_time_format = '%a %Y-%m-%d %H:%M:%S %Z'
 
-    def __init__(self, name: str, log=print):
+    def __init__(self, name: str, log=print, use_dbus=True):
         self.log = log
+
+        self.use_dbus = use_dbus
+
+        if self.use_dbus and dbus is None:
+            self.log("Cannot use dbus implementation: 'dbus' package is not present!")
+            self.use_dbus = False
+
+        self.sysbus = None
+        self.systemd1 = None
+        self.manager = None
+
         name = name.strip()
         if len(name) == 0:
             raise Exception('Service name must be specified.')
@@ -16,20 +33,40 @@ class Service:
             raise Exception('Service name cannot contain spaces.')
         self.name = name
 
+    def get_dbus_manager(self):
+        if self.manager is None:
+            self.sysbus = dbus.SystemBus()
+            self.systemd1 = self.sysbus.get_object('org.freedesktop.systemd1', '/org/freedesktop/systemd1')
+            self.manager = dbus.Interface(self.systemd1, 'org.freedesktop.systemd1.Manager')
+        return self.manager
+
     def start(self):
-        subprocess.check_call(['sudo', 'systemctl', 'start', self.name])
+        if self.use_dbus:
+            self.get_dbus_manager().StartUnit(self.name, 'fail')
+        else:
+            try:
+                subprocess.check_call(['sudo', 'systemctl', 'start', self.name])
+            except subprocess.CalledProcessError as ex:
+                self.log(ex)
 
     def stop(self):
-        subprocess.check_call(['sudo', 'systemctl', 'stop', self.name])
+        if self.use_dbus:
+            self.get_dbus_manager().StopUnit(self.name, 'fail')
+        else:
+            subprocess.check_call(['sudo', 'systemctl', 'stop', self.name])
 
     def restart(self):
-        subprocess.check_call(['sudo', 'systemctl', 'restart', self.name])
+        if self.use_dbus:
+            self.get_dbus_manager().RestartUnit(self.name, 'fail')
+        else:
+            subprocess.check_call(['sudo', 'systemctl', 'restart', self.name])
 
     def _status(self):
         """
         Returns dictionary of values returned by systemctl show call.
         :return: dict
         """
+        # todo: dbus implementation
         p = subprocess.check_output(['systemctl', 'show', self.name, '--no-page'])
         stat = {}
         for line in p.decode('utf8').splitlines():
