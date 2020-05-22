@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="b66004c1-33bc-47d0-89eb-cc90aca8aa3f" name="cubot@firefly:22" url="http:///">
+        <fileTransfer host="firefly" port="22" privateKey="C:\Users\solin\.ssh\id_rsa" accessType="SFTP" keyPair="true">
+          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

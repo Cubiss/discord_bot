@@ -51,5 +51,4 @@ class Logger:
         return Logger(
                     file=open(log_path, openmode, encoding=encoding),
                     add_timestamps=add_timestamps,
-                    use_stdout=use_stdout
-                )
+                    use_stdout=use_stdout, log_file_writes=False)

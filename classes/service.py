@@ -76,8 +76,7 @@ class Service:
         return stat
 
     def status_string(self):
-        x = subprocess.check_output(['systemctl', 'status', self.name]).decode('utf8')\
-            .splitlines()[2].strip()
+        x = subprocess.check_output(['systemctl', 'status', self.name]).decode('utf8').splitlines()[2].strip()
         self.log(f'{self.name} status string:\n{x}')
         return x
 
