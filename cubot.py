@@ -413,9 +413,8 @@ def run_bot(client: Cubot):
 
 if __name__ == '__main__':
     try:
-        printer = Logger('./log.log', timestamps=True)
-        log = printer.log
-        bot = Cubot(log_commands=True, log_function=printer.log)
+        log = Logger.create_logger(path='./log.log', add_timestamps=True)
+        bot = Cubot(log_commands=True, log_function=log)
         run_bot(bot)
     except Exception as exc:
         builtins.print("Fatal exception thrown:")
@@ -426,3 +425,4 @@ if __name__ == '__main__':
         builtins.print(tb)
 
         exit(-1)
+
