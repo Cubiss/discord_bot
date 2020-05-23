@@ -4,8 +4,9 @@ import traceback
 
 import discord
 
-from c__lib.c__string import seconds_to_czech_string
-from c__lib.c__string import format_table
+from c__lib import seconds_to_czech_string
+from c__lib import format_table
+
 
 from classes.reactor import Reaction
 from classes.command import Command

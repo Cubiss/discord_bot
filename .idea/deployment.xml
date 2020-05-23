@@ -12,7 +12,7 @@
       <paths name="cubot@firefly:22">
         <serverdata>
           <mappings>
-            <mapping deploy="/tmp/pycharm_project_discord_bot" local="$PROJECT_DIR$" />
+            <mapping deploy="/opt/cubot/discord_bot" local="$PROJECT_DIR$" />
           </mappings>
         </serverdata>
       </paths>

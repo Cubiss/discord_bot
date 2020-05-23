@@ -3,7 +3,7 @@ import datetime
 import sqlite3
 import os
 
-from c__lib.c__input import yes_no_input
+from c__lib import yes_no_input
 
 from classes.reactor import Reactor
 from classes.users import Users
