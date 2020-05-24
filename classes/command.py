@@ -9,7 +9,7 @@ class Command:
     # message: discord.Message to which the command is reacting
     # db: database assigned to the bot
     # client: reference to Cubot
-    command_parameters = ['message', 'db', 'client']
+    command_parameters = ['message', 'db', 'client', 'user']
 
     def __init__(
             self,
@@ -89,6 +89,7 @@ class Command:
             'message': message,
             'db': self.db,
             'client': client,
+            'user': users[message.author.id]
         }
 
         params.update(match.groupdict())

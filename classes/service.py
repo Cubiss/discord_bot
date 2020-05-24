@@ -13,7 +13,7 @@ class Service:
     _unit_name = 'sshd.service'
     # _status_time_format = '%a %Y-%m-%d %H:%M:%S %Z'
 
-    def __init__(self, name: str, log=print, use_dbus=True):
+    def __init__(self, name: str, log=print, use_dbus=False):
         self.log = log
 
         self.use_dbus = use_dbus
@@ -76,7 +76,10 @@ class Service:
         return stat
 
     def status_string(self):
-        x = subprocess.check_output(['systemctl', 'status', self.name]).decode('utf8').splitlines()[2].strip()
+        try:
+            x = subprocess.check_output(['systemctl', 'status', self.name]).decode('utf8').splitlines()[2].strip()
+        except subprocess.CalledProcessError as ex:
+            x = ex.output.decode('utf8')
         self.log(f'{self.name} status string:\n{x}')
         return x
 

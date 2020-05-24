@@ -1,5 +1,6 @@
 import datetime
 import builtins
+import time
 import traceback
 
 import discord
@@ -7,12 +8,12 @@ import discord
 from c__lib import seconds_to_czech_string
 from c__lib import format_table
 
-
 from classes.reactor import Reaction
 from classes.command import Command
 from classes.cubot import Cubot
 from classes.logger import Logger
 from classes.service import Service
+from classes.users import User, Users
 
 #  ############################# COMMANDS #############################################################################
 
@@ -156,58 +157,63 @@ async def change_username(message: discord.Message, client: Cubot, **__) -> bool
     return True
 
 
-async def minecraft(message: discord.Message, **__) -> bool:
-    s = Service('minecraft.service')
-    running = True
-    status = ''
-    address = 'firefly.danol.cz'
-    from subprocess import CalledProcessError
-    try:
-        running = s.is_running()
-        status = s.status_string()
-    except CalledProcessError:
-        pass
+async def minecraft(message: discord.Message, user: User, cmd=None, **__) -> bool:
 
-    if running:
-        await message.channel.send(f'Minecraft server is running on {address}:\n{status})')
+    cmd = (cmd or '').lower()
+
+    if cmd not in ['', 'ip', 'status', 'start', 'stop', 'restart']:
+        await message.channel.send(f"Invalid command: {cmd}")
+        return True
+
+    s = Service('minecraft.service', use_dbus=False)
+    status_string = s.status_string()
+
+    if cmd in ['', 'ip']:
+        running = True
+        status = ''
+        address = 'firefly.danol.cz'
+        from subprocess import CalledProcessError
+        try:
+            running = s.is_running()
+            status = s.status_string()
+        except CalledProcessError:
+            pass
+
+        if running:
+            await message.channel.send(f'Minecraft server is running on {address}:\n{status})')
+        else:
+            await message.channel.send(f'Minecraft server is not running. Use "!minecraft start" to start it.\n'
+                                       f'It will run on {address}.')
+        return True
+
+    elif cmd == 'status':
+        await message.channel.send('Minecraft status:\n' + status_string)
+        return True
+
+    if user is not None and user.has_permission('minecraft'):
+        if cmd == 'start':
+            if s.is_running():
+                await message.channel.send('Minecraft is already running:\n' + status_string)
+            else:
+                s.start()
+                await message.channel.send('Minecraft status:\n' + s.status_string())
+            return True
+
+        elif cmd == 'stop':
+            if s.is_running():
+                s.stop()
+                await message.channel.send('Stopping minecraft server:\n' + s.status_string())
+            else:
+                await message.channel.send('Minecraft server is not running:\n' + status_string)
+            return True
+
+        elif cmd == 'restart':
+            s.restart()
+            await message.channel.send('Restarting minecraft server:\n' + s.status_string())
+            return True
     else:
-        await message.channel.send(f'Minecraft server is not running. Use "!mcserver start" to start it.\n'
-                                   f'It will run on {address}.')
-
-    return True
-
-
-async def minecraft_status(message: discord.Message, **__) -> bool:
-    s = Service('minecraft.service')
-    await message.channel.send('Minecraft status:\n' + s.status_string())
-    return True
-
-
-async def minecraft_start(message: discord.Message, **__) -> bool:
-    s = Service('minecraft.service')
-    if s.is_running():
-        await message.channel.send('Minecraft is already running:\n' + s.status_string())
-    else:
-        s.start()
-        await message.channel.send('Minecraft status:\n' + s.status_string())
-    return True
-
-
-async def minecraft_stop(message: discord.Message, **__) -> bool:
-    s = Service('minecraft.service')
-    if s.is_running():
-        s.stop()
-        await message.channel.send('Stopping minecraft server:\n' + s.status_string())
-    else:
-        await message.channel.send('Minecraft server is not running:\n' + s.status_string())
-    return True
-
-
-async def minecraft_restart(message: discord.Message, **__) -> bool:
-    s = Service('minecraft.service')
-    s.restart()
-    await message.channel.send('Restarting minecraft server:\n' + s.status_string())
-    return True
+        await message.channel.send(f"You don't have permission for following command: {cmd}")
+        return True
 
 
 async def permissions(message: discord.Message, client: Cubot, **kwargs) -> bool:
@@ -349,53 +355,10 @@ def run_bot(client: Cubot):
     client.addcom(
         Command(
             names=['minecraft'],
-            regexp=r'^__name__\s*$',
+            regexp=r'^__name__\s*(?P<cmd>\S*)$',
             command=minecraft,
             usage=f'__author__ Usage: !minecraft',
             description='Displays minecraft server\'s address.'
-        )
-    )
-
-    client.addcom(
-        Command(
-            names=['mcserver start', 'mcs start'],
-            regexp=r'^__name__\s*$',
-            command=minecraft_start,
-            usage=f'__author__ Usage: !mcserver start',
-            description='Starts the minecraft server.',
-            # permissions=['minecraft']
-        )
-    )
-
-    client.addcom(
-        Command(
-            names=['mcserver stop', 'mcs stop'],
-            regexp=r'^__name__\s*$',
-            command=minecraft_stop,
-            usage=f'__author__ Usage: !mcserver stop',
-            description='Changes the bot''s username.',
-            permissions=['minecraft']
-        )
-    )
-
-    client.addcom(
-        Command(
-            names=['mcserver restart', 'mcs restart'],
-            regexp=r'^__name__\s*$',
-            command=minecraft_restart,
-            usage=f'__author__ Usage: !mcserver restart',
-            description='Changes the bot''s username.',
-            permissions=['minecraft']
-        )
-    )
-
-    client.addcom(
-        Command(
-            names=['mcserver status', 'mcs status'],
-            regexp=r'^__name__\s*$',
-            command=minecraft_status,
-            usage=f'__author__ Usage: !mcserver status',
-            description='Changes the bot\'s username.'
         )
     )
 
@@ -409,7 +372,11 @@ def run_bot(client: Cubot):
         )
     )
 
-    client.run(open('token', 'r').read().strip())
+    for tries in range(0, 60):
+        try:
+            client.run(open('token', 'r').read().strip())
+        except Exception as ex:
+            time.sleep(30)
 
 
 if __name__ == '__main__':

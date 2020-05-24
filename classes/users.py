@@ -34,6 +34,12 @@ class User:
         c.execute(f"DELETE FROM Users WHERE USER_ID = '{self.id}'")
         c.execute(f"DELETE FROM Permissions WHERE USER_ID = '{self.id}'")
 
+    def has_permission(self, perm: str):
+        if 'admin' in self.permissions:
+            return True
+        else:
+            return perm in self.permissions
+
 
 class Users:
     def __init__(self, db: sqlite3.Connection):
