@@ -18,7 +18,9 @@ class Logger:
             if 'file' not in kwargs or self.log_file_writes or kwargs['file'] in [sys.stderr, sys.stdout]:
                 fkwargs = kwargs.copy()
                 fkwargs['file'] = self.file
+
                 print(*args, **fkwargs)
+                self.file.flush()
 
             pass
         if self.use_stdout:
