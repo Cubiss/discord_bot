@@ -70,9 +70,16 @@ class Users:
         else:
             self._users[user_id] = user
 
+    def __iter__(self):
+        yield from self._users.values()
+
+    # def __next__(self):
+    #     return next(self._users)
+
+
     def get_or_create(self, user):
         assert (isinstance(user, discord.User) or isinstance(user, discord.Member))
-        u = self._users[user.id]
+        u = self[user.id]
         if u is None:
             u = User(db=self.db, user=user)
             self._users[u.id] = u

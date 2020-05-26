@@ -29,14 +29,13 @@ class Cubot(discord.Client):
         """
         if database is sqlite3.Connection:
             self.database = database
-        elif database is str or database is None:
+        elif type(database) == str or database is None:
             if database is None:
-                database = './cubot.db'
+                database = 'cubot.db'
             if os.path.isfile(database):
                 self.database = sqlite3.connect(database)
             elif yes_no_input('Database file not found. Should I create and initialize a new one? [y/n]'):
                 self.database = sqlite3.connect(database)
-                # self.init_database(self.database)
             else:
                 raise Exception('Database file not found.')
 

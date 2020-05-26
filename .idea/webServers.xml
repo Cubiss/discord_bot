@@ -2,8 +2,11 @@
 <project version="4">
   <component name="WebServers">
     <option name="servers">
-      <webServer id="b66004c1-33bc-47d0-89eb-cc90aca8aa3f" name="cubot@firefly:22 (project level)" url="http:///">
-        <fileTransfer host="firefly" port="22" privateKey="C:\Users\solin\.ssh\id_rsa" accessType="SFTP" keyPair="true">
+      <webServer id="6c71a210-e2be-4c10-a432-ee8bd718a7ca" name="cubot@firefly - test" url="http://firefly">
+        <fileTransfer host="firefly" port="22" privateKey="C:\Users\solin\.ssh\id_rsa" rootFolder="/opt/cubot" accessType="SFTP" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
           <option name="port" value="22" />
         </fileTransfer>
       </webServer>

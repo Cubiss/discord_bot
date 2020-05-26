@@ -413,6 +413,8 @@ if __name__ == '__main__':
                                  'https://discordpy.readthedocs.io/en/latest/discord.html#discord-intro')
         parser.add_argument('--log', type=str, default=None, required=False,
                             help='Working directory for making thumbnails.')
+        parser.add_argument('--db', type=str, default='cubot.db', required=False,
+                            help='Database file location.')
         parser.add_argument('--no_timestamps', action='store_true', default=False,
                             help='Rebuild all thumbnails from scratch.')
         args = parser.parse_args()
@@ -420,7 +422,7 @@ if __name__ == '__main__':
             log = Logger(file=None, use_stdout=True, log_file_writes=False, add_timestamps=not args.no_timestamps)
         else:
             log = Logger.create_logger(path=args.log, add_timestamps=not args.no_timestamps)
-        bot = Cubot(log_commands=True, log_function=log)
+        bot = Cubot(log_commands=True, log_function=log, database=args.db)
         run_bot(bot, open(args.token, 'r').read().strip())
     except Exception as exc:
         builtins.print("Fatal exception thrown:")

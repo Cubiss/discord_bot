@@ -1,32 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="cubot@firefly:22">
+  <component name="PublishConfigData" autoUpload="Always" serverName="cubot@firefly - test">
     <serverData>
-      <paths name="Copy of project-level server 'cubot@firefly:22'">
+      <paths name="Copy of project-level server 'cubot@firefly - test'">
         <serverdata>
           <mappings>
-            <mapping deploy="/tmp/pycharm_project_discord_bot" local="$PROJECT_DIR$" />
+            <mapping deploy="/test" local="$PROJECT_DIR$" web="/" />
+            <mapping local="" />
           </mappings>
         </serverdata>
       </paths>
-      <paths name="cubot@firefly:22">
+      <paths name="cubot@firefly - test">
         <serverdata>
           <mappings>
-            <mapping deploy="/home/cubot/discord_bot" local="$PROJECT_DIR$" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="cubot@firefly:22 (project level)">
-        <serverdata>
-          <mappings>
-            <mapping deploy="/opt/cubot/discord_bot" local="$PROJECT_DIR$" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="pi@firefly:22">
-        <serverdata>
-          <mappings>
-            <mapping local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/test" local="$PROJECT_DIR$" web="/" />
+            <mapping local="" />
           </mappings>
         </serverdata>
       </paths>
