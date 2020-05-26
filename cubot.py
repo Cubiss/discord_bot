@@ -228,6 +228,9 @@ async def permissions(message: discord.Message, client: Cubot, **kwargs) -> bool
 
     if cmd == 'add':
         u = ul.get_or_create(mention)
+        if permission in u.permissions:
+            await message.channel.send(f"{mention.nick or mention.display_name} already has that permission.")
+            return True
         u.permissions.append(permission)
         u.save()
         await message.channel.send(f"Added '{permission}' permission to {mention.nick or mention.display_name}")
