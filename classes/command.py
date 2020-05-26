@@ -62,7 +62,7 @@ class Command:
 
     def run(self, message: discord.Message, client: discord.Client, users: Users):
         # check access
-        if self.permissions is not None:
+        if self.permissions is not None and len(self.permissions) > 0:
             u = users[message.author.id]
             if u is not None and \
                ('admin' in u.permissions or any(p in u.permissions for p in self.permissions)):
