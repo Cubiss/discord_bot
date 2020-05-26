@@ -12,7 +12,21 @@
       <paths name="cubot@firefly:22">
         <serverdata>
           <mappings>
+            <mapping deploy="/home/cubot/discord_bot" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="cubot@firefly:22 (project level)">
+        <serverdata>
+          <mappings>
             <mapping deploy="/opt/cubot/discord_bot" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="pi@firefly:22">
+        <serverdata>
+          <mappings>
+            <mapping local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>

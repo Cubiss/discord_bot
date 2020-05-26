@@ -367,7 +367,7 @@ def run_bot(client: Cubot):
             names=['permissions', 'permission'],
             regexp=r'^__name__\s+(?P<command>add|remove|list)(\s+<@!?(?P<mention>\d*?)>)?(\s+(?P<permission>.*?))?$',
             command=permissions,
-            usage=f'__author__ Usage: !minecraft start',
+            usage=f'__author__ Usage: !permissions <add|remove|list> [@who] [permission]',
             description='Change permissions.'
         )
     )
