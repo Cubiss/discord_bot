@@ -261,11 +261,17 @@ async def permissions(message: discord.Message, client: Cubot, **kwargs) -> bool
         if mention is not None:
             u = ul[mention.id]
             if u is None or len(u.permissions) == 0:
-                await message.channel.send(f"{mention.nick or mention.display_name} has no pe")
+                await message.channel.send(f"{mention.nick or mention.display_name} has no permissions.")
             else:
                 await message.channel.send(f"{mention.nick or mention.display_name}'s permissions:\n"
                                            f"{', '.join(u.permissions)}")
-
+        if permission is not None:
+            users = [u.name for u in ul if u.has_permission(permission)]
+            if len(users) == 0:
+                await message.channel.send(f"Nobody has '{permission}' permission.")
+            else:
+                await message.channel.send(f"Users with '{permission}' permissions:\n"
+                                           f"{', '.join(users)}")
         pass
     else:
         await message.channel.send(f"Wrong command: '{cmd}'. Only one of following is available: add, remove, list")
