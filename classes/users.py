@@ -16,6 +16,7 @@ class User:
         self.id = user_id or user.id
         self.name = user_name or user.display_name
         self.permissions = []
+        self.save()
 
     def save(self):
         c = self.db.cursor()
@@ -27,12 +28,14 @@ class User:
         for p in self.permissions:
             c.execute(f"INSERT INTO Permissions(USER_ID, PERMISSION_ID) VALUES ({self.id}, '{p}') "
                       f"ON CONFLICT(USER_ID, PERMISSION_ID) DO NOTHING ")
+        self.db.commit()
 
     def remove(self):
         c = self.db.cursor()
 
         c.execute(f"DELETE FROM Users WHERE USER_ID = '{self.id}'")
         c.execute(f"DELETE FROM Permissions WHERE USER_ID = '{self.id}'")
+        self.db.commit()
 
     def has_permission(self, perm: str):
         if 'admin' in self.permissions:
