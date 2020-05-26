@@ -195,20 +195,32 @@ async def minecraft(message: discord.Message, user: User, cmd=None, **__) -> boo
             if s.is_running():
                 await message.channel.send('Minecraft is already running:\n' + status_string)
             else:
-                s.start()
+                try:
+                    s.start()
+                except Exception as ex:
+                    await message.channel.send(f'Failed to start the server: {ex}')
+                    return False
                 await message.channel.send('Minecraft status:\n' + s.status_string())
             return True
 
         elif cmd == 'stop':
             if s.is_running():
-                s.stop()
+                try:
+                    s.stop()
+                except Exception as ex:
+                    await message.channel.send(f'Failed to start the server: {ex}')
+                    return False
                 await message.channel.send('Stopping minecraft server:\n' + s.status_string())
             else:
                 await message.channel.send('Minecraft server is not running:\n' + status_string)
             return True
 
         elif cmd == 'restart':
-            s.restart()
+            try:
+                s.stop()
+            except Exception as ex:
+                await message.channel.send(f'Failed to start the server: {ex}')
+                return False
             await message.channel.send('Restarting minecraft server:\n' + s.status_string())
             return True
     else:
