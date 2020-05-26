@@ -2,7 +2,7 @@ import datetime
 import builtins
 import time
 import traceback
-
+import argparse
 import discord
 
 from c__lib import seconds_to_czech_string
@@ -381,7 +381,16 @@ def run_bot(client: Cubot):
 
 if __name__ == '__main__':
     try:
-        log = Logger.create_logger(path='./log.log', add_timestamps=True)
+        parser = argparse.ArgumentParser(description='Create thumbnails for all images recursively bottom up.')
+        parser.add_argument('--log', nargs='?', type=str,
+                            help='Working directory for making thumbnails.')
+        parser.add_argument('--no_timestamps', action='store_true', default=False,
+                            help='Rebuild all thumbnails from scratch.')
+        args = parser.parse_args()
+        if args.log is None:
+            log = Logger(file=None, use_stdout=True, log_file_writes=False, add_timestamps=not args.no_timestamps)
+        else:
+            log = Logger.create_logger(path=args.log, add_timestamps=not args.no_timestamps)
         bot = Cubot(log_commands=True, log_function=log)
         run_bot(bot)
     except Exception as exc:
