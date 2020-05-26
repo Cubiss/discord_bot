@@ -15,6 +15,7 @@ from classes.logger import Logger
 from classes.service import Service
 from classes.users import User, Users
 
+
 #  ############################# COMMANDS #############################################################################
 
 
@@ -158,7 +159,6 @@ async def change_username(message: discord.Message, client: Cubot, **__) -> bool
 
 
 async def minecraft(message: discord.Message, user: User, cmd=None, **__) -> bool:
-
     cmd = (cmd or '').lower()
 
     if cmd not in ['', 'ip', 'status', 'start', 'stop', 'restart']:
@@ -258,7 +258,7 @@ async def permissions(message: discord.Message, client: Cubot, **kwargs) -> bool
     return True
 
 
-def run_bot(client: Cubot):
+def run_bot(client: Cubot, token: str):
     client.addcom(
         Command(
             names=['profilepicture', 'profilepic', 'pp'],
@@ -375,17 +375,22 @@ def run_bot(client: Cubot):
         )
     )
 
-    for tries in range(0, 60):
+    for tries in range(0, 10):
+        # noinspection PyBroadException
         try:
-            client.run(open('token', 'r').read().strip())
-        except Exception as ex:
-            time.sleep(30)
+            client.run(token)
+        except Exception:
+            # todo: catch the right exception
+            time.sleep(180)
 
 
 if __name__ == '__main__':
     try:
         parser = argparse.ArgumentParser(description='Create thumbnails for all images recursively bottom up.')
-        parser.add_argument('--log', nargs='?', type=str,
+        parser.add_argument('--token', type=str, default='token', required=False,
+                            help='Path to file with a discord login token: '
+                                 'https://discordpy.readthedocs.io/en/latest/discord.html#discord-intro')
+        parser.add_argument('--log', type=str, default=None, required=False,
                             help='Working directory for making thumbnails.')
         parser.add_argument('--no_timestamps', action='store_true', default=False,
                             help='Rebuild all thumbnails from scratch.')
@@ -395,7 +400,7 @@ if __name__ == '__main__':
         else:
             log = Logger.create_logger(path=args.log, add_timestamps=not args.no_timestamps)
         bot = Cubot(log_commands=True, log_function=log)
-        run_bot(bot)
+        run_bot(bot, open(args.token, 'r').read().strip())
     except Exception as exc:
         builtins.print("Fatal exception thrown:")
         builtins.print(exc)
@@ -405,4 +410,3 @@ if __name__ == '__main__':
         builtins.print(tb)
 
         exit(-1)
-
