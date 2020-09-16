@@ -282,7 +282,7 @@ async def permissions(message: discord.Message, client: Cubot, **kwargs) -> bool
     return True
 
 
-async def random_iq(message: discord.Message) -> bool:
+async def random_iq(message: discord.Message, **__) -> bool:
     mention: discord.Member
     mention = message.mentions[0] if len(message.mentions) > 0 else None
 
