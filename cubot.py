@@ -6,6 +6,7 @@ import traceback
 import argparse
 import discord
 import numpy
+import signal
 
 from c__lib import seconds_to_czech_string
 from c__lib import format_table
@@ -293,6 +294,12 @@ async def random_iq(message: discord.Message, _: Cubot, **__) -> bool:
 
 
 def run_bot(client: Cubot, token: str):
+    def signal_handler(_, __):
+        client.logout()
+        exit(0)
+
+    signal.signal(signal.SIGINT, signal_handler)
+
     client.addcom(
         Command(
             names=['profilepicture', 'profilepic', 'pp'],
