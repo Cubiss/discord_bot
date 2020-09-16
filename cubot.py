@@ -1,9 +1,11 @@
+#!/usr/bin/python3
 import datetime
 import builtins
 import time
 import traceback
 import argparse
 import discord
+import numpy
 
 from c__lib import seconds_to_czech_string
 from c__lib import format_table
@@ -13,7 +15,7 @@ from classes.command import Command
 from classes.cubot import Cubot
 from classes.logger import Logger
 from classes.service import Service
-from classes.users import User, Users
+from classes.users import User
 
 
 #  ############################# COMMANDS #############################################################################
@@ -252,7 +254,7 @@ async def permissions(message: discord.Message, client: Cubot, **kwargs) -> bool
     elif cmd == 'remove':
         u = ul[mention.id]
         if u is None or permission not in u.permissions:
-            await message.channel.send(f"{u.name} doesn't have '{permission}' permission.")
+            await message.channel.send(f"{mention.display_name} doesn't have '{permission}' permission.")
         else:
             u.permissions.remove(permission)
             u.save()
@@ -275,6 +277,17 @@ async def permissions(message: discord.Message, client: Cubot, **kwargs) -> bool
         pass
     else:
         await message.channel.send(f"Wrong command: '{cmd}'. Only one of following is available: add, remove, list")
+
+    return True
+
+
+async def random_iq(message: discord.Message, _: Cubot, **__) -> bool:
+    mention: discord.Member
+    mention = message.mentions[0] if len(message.mentions) > 0 else None
+
+    iq = int(numpy.random.normal(100, 15))
+
+    await message.channel.send(f'{mention.name}\'s iq is {iq}.')
 
     return True
 
@@ -396,13 +409,23 @@ def run_bot(client: Cubot, token: str):
         )
     )
 
-    for tries in range(0, 10):
+    client.addcom(
+        Command(
+            names=['iq'],
+            regexp=r'^__name__(\s*<@!?(?P<mention>\d*?)>)?$',
+            command=random_iq,
+            usage='__author__ Usage: !iq [@mention]',
+            description='Magically measures user\'s iq.'
+        )
+    )
+
+    for tries in range(0, 30):
         # noinspection PyBroadException
         try:
             client.run(token)
         except Exception:
             # todo: catch the right exception
-            time.sleep(180)
+            time.sleep(60)
 
 
 if __name__ == '__main__':
@@ -416,7 +439,7 @@ if __name__ == '__main__':
         parser.add_argument('--db', type=str, default='cubot.db', required=False,
                             help='Database file location.')
         parser.add_argument('--no_timestamps', action='store_true', default=False,
-                            help='Rebuild all thumbnails from scratch.')
+                            help='Don\'t add timestamps to log file.')
         args = parser.parse_args()
         if args.log is None:
             log = Logger(file=None, use_stdout=True, log_file_writes=False, add_timestamps=not args.no_timestamps)
