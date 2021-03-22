@@ -174,7 +174,7 @@ async def minecraft(message: discord.Message, user: User, cmd=None, **__) -> boo
     if cmd in ['', 'ip']:
         running = True
         status = ''
-        address = 'firefly.danol.cz'
+        address = 'cubiss.cz'
         from subprocess import CalledProcessError
         try:
             running = s.is_running()
