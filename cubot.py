@@ -27,17 +27,18 @@ async def test(message: discord.Message, **__):
     pass
 
 
-async def profile_picture(message: discord.Message, **kwargs):
+async def profile_picture(message: discord.Message, client: Cubot, **kwargs):
     """
     Displays full sized profile picture of either user or a mentioned member.
     :param message:
     :param kwargs:
     :return:
     """
-    if kwargs['mention'] is None:
-        user = message.author
-    else:
+
+    if kwargs['mention'] is not None:
         user = message.guild.get_member(int(kwargs['mention']))
+    else:
+        user = message.author
 
     embed = discord.Embed(
         title=f'{user.name}\'s profile picture.',
@@ -289,6 +290,11 @@ async def random_iq(message: discord.Message, **__) -> bool:
     iq = int(numpy.random.normal(100, 15))
 
     await message.channel.send(f'{mention.name}\'s iq is {iq}.')
+
+    return True
+
+
+async def role_manager(message: discord.Message, **__) -> bool:
 
     return True
 

@@ -76,7 +76,6 @@ class Users:
     # def __next__(self):
     #     return next(self._users)
 
-
     def get_or_create(self, user):
         assert (isinstance(user, discord.User) or isinstance(user, discord.Member))
         u = self[user.id]

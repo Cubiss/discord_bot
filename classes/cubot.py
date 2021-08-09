@@ -46,6 +46,10 @@ class Cubot(discord.Client):
 
         self.user_list = Users(self.database)
 
+        intents = discord.Intents.default()
+        intents.members = True
+        kwargs['intents'] = intents
+
         super(Cubot, self).__init__(*args, **kwargs)
 
     def addcom(self, command: Command):
@@ -97,6 +101,11 @@ class Cubot(discord.Client):
                     self.log(message.content)
                     self.log(ex)
                     raise
+
+    async def on_reaction_add(self, reaction, user):
+        if user == self.user:
+            return
+        pass
 
     async def help(self, message: discord.Message):
         help_str = '```'
