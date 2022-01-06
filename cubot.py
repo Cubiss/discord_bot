@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import datetime
 import builtins
+import random
 import time
 import traceback
 import argparse
@@ -22,55 +23,6 @@ from classes.users import User
 #  ############################# COMMANDS #############################################################################
 
 
-async def test(message: discord.Message, **__):
-    log(message.content)
-    pass
-
-
-async def profile_picture(message: discord.Message, client: Cubot, **kwargs):
-    """
-    Displays full sized profile picture of either user or a mentioned member.
-    :param message:
-    :param kwargs:
-    :return:
-    """
-
-    if kwargs['mention'] is not None:
-        user = message.guild.get_member(int(kwargs['mention']))
-    else:
-        user = message.author
-
-    embed = discord.Embed(
-        title=f'{user.name}\'s profile picture.',
-        # description='{}\'s profile picture.'.format(user.mention) , color=0xecce8b
-    )
-    embed.set_image(url=user.avatar_url)
-    await message.channel.send(
-        '',
-        embed=embed
-    )
-
-    return True
-
-
-async def get_user_id(message: discord.Message, **kwargs):
-    """
-    Displays full sized profile picture of either user or a mentioned member.
-    :param message:
-    :param kwargs:
-    :return:
-    """
-    if kwargs['mention'] is None:
-        user = message.author
-    else:
-        user = message.guild.get_member(int(kwargs['mention']))
-
-    await message.channel.send(
-        f'{str(user)}\'s id: {user.id}'
-    )
-    return True
-
-
 async def classic_release(message: discord.Message, **__) -> bool:
     time_str = seconds_to_czech_string(
         (
@@ -78,12 +30,6 @@ async def classic_release(message: discord.Message, **__) -> bool:
         ).total_seconds())
 
     await message.channel.send(f'Classic je venku už {time_str}!')
-
-    return True
-
-
-async def love(message: discord.Message, **__) -> bool:
-    await message.channel.send(f'Miluje tě, jj')
 
     return True
 
@@ -299,6 +245,60 @@ async def role_manager(message: discord.Message, **__) -> bool:
     return True
 
 
+async def slap(message: discord.Message, **kwargs) -> bool:
+    # <person A> slaps <person B> around a bit with a large trout
+
+    user = message.author
+
+    if kwargs['mention'] is None:
+        target = message.guild.get_member(int(kwargs['mention']))
+    else:
+        return False
+
+    await message.channel.send(f'{user.name} slaps {target.name} around a bit with a large trout.')
+
+    return True
+
+
+async def roll(message: discord.Message, count, faces, bonus, **__) -> bool:
+
+    try:
+        if count is None or count == '':
+            count = 1
+        else:
+            count = int(count)
+
+        faces = int(faces)
+
+        if bonus is None or bonus == '':
+            bonus = 0
+        else:
+            bonus = int(bonus)
+    except:
+        return False
+
+    rolls = []
+    rolls_str = []
+
+    for i in range(0, count):
+        result = random.randint(1, faces) + bonus
+        rolls.append(result)
+        rolls_str.append(str(result))
+
+    bonus_msg = ""
+    if bonus > 0:
+        bonus_msg = f' with a bonus of {bonus}'
+
+    if len(rolls) == 1:
+        await message.channel.send(
+            f'Rolling d{faces}{bonus_msg}... Your rolled **{sum(rolls)}**!')
+    else:
+        await message.channel.send(
+            f'Rolling {count}d{faces}{bonus_msg}...\n {"... ".join(rolls_str)}... \nYour result is **{sum(rolls)}**!\nAverage roll was {sum(rolls)/len(rolls)}')
+
+    return True
+
+
 def run_bot(client: Cubot, token: str):
     def signal_handler(_, __):
         client.logout()
@@ -310,20 +310,9 @@ def run_bot(client: Cubot, token: str):
         Command(
             names=['profilepicture', 'profilepic', 'pp'],
             regexp=r'^__name__(\s*<@!?(?P<mention>\d*?)>)?$',
-            command=profile_picture,
+            function=profile_picture,
             usage='__author__ Usage: !profilepicture [@mention]',
             description='Displays profile picture of you or a mentioned user.'
-        )
-    )
-
-    client.addcom(
-        Command(
-            names=['test', 't'],
-            regexp=r'^__name__(.*)?$',
-            command=test,
-            usage='__author__ Usage: !profilepicture [@mention]',
-            description='Test command.',
-            permissions=['admin']
         )
     )
 
@@ -332,7 +321,7 @@ def run_bot(client: Cubot, token: str):
             names=['addreactor'],
             regexp=r'^__name__\s*(?P<mention><@.*>)\s*(?P<emote><.*?>)'
                    r'\s*(?P<percentage>\d?\.?\d+%?)\s*(?P<cooldown>\d*)\s*(?P<server>-server)?$',
-            command=add_reactor,
+            function=add_reactor,
             usage='__author__ Usage: !addreactor <@mention> <emote> <chance> [-server]',
             description='Adds reactor.)',
             permissions=['reactors']
@@ -343,7 +332,7 @@ def run_bot(client: Cubot, token: str):
         Command(
             names=['listreactors'],
             regexp=r'^__name__( .*)?$',
-            command=list_reactors,
+            function=list_reactors,
             usage=f'__author__ Usage: !listreactors',
             description='Lists all reactors relevant to this server.',
             permissions=['reactors']
@@ -354,7 +343,7 @@ def run_bot(client: Cubot, token: str):
         Command(
             names=['removereactor'],
             regexp=r'^__name__\s*(?P<id>\d*)\s*$',
-            command=remove_reactor,
+            function=remove_reactor,
             usage=f'__author__ Usage: !removereactor <id>',
             description='Removes a reactor.',
             permissions=['reactors']
@@ -365,7 +354,7 @@ def run_bot(client: Cubot, token: str):
         Command(
             names=['get_id'],
             regexp=r'^__name__(\s+<@!?(?P<mention>\d*?)>)?$',
-            command=get_user_id,
+            function=get_user_id,
             usage='__author__ Usage: !permission <add|remove|list> [@mention] [permission_name]',
             description='Displays discord id of mentioned user. (For devs mainly.)'
         )
@@ -375,7 +364,7 @@ def run_bot(client: Cubot, token: str):
         Command(
             names=['classic'],
             regexp=r'^__name__( .*)?$',
-            command=classic_release,
+            function=classic_release,
             usage=f'__author__ Usage: !classic',
             description='Displays time since release of Classic WoW in czech language.'
         )
@@ -385,7 +374,7 @@ def run_bot(client: Cubot, token: str):
         Command(
             names=['love'],
             regexp=r'^__name__( .*)?$',
-            command=love,
+            function=love,
             usage=f'__author__ Usage: !love',
             description='Řekne jestli tě miluje.'
         )
@@ -395,7 +384,7 @@ def run_bot(client: Cubot, token: str):
         Command(
             names=['change_username', 'cu'],
             regexp=r'^__name__ (?P<name>.*)$',
-            command=change_username,
+            function=change_username,
             usage=f'__author__ Usage: !change_username <username>',
             description='Changes the bot''s username.',
             permissions=['admin']
@@ -406,7 +395,7 @@ def run_bot(client: Cubot, token: str):
         Command(
             names=['minecraft'],
             regexp=r'^__name__\s*(?P<cmd>\S*)$',
-            command=minecraft,
+            function=minecraft,
             usage=f'__author__ Usage: !minecraft',
             description='Displays minecraft server\'s address.'
         )
@@ -416,7 +405,7 @@ def run_bot(client: Cubot, token: str):
         Command(
             names=['permissions', 'permission'],
             regexp=r'^__name__\s+(?P<command>add|remove|list)(\s+<@!?(?P<mention>\d*?)>)?(\s+(?P<permission>.*?))?$',
-            command=permissions,
+            function=permissions,
             usage=f'__author__ Usage: !permissions <add|remove|list> [@who] [permission]',
             description='Change permissions.'
         )
@@ -426,9 +415,19 @@ def run_bot(client: Cubot, token: str):
         Command(
             names=['iq'],
             regexp=r'^__name__(\s*<@!?(?P<mention>\d*?)>)?$',
-            command=random_iq,
+            function=random_iq,
             usage='__author__ Usage: !iq [@mention]',
             description='Magically measures user\'s iq.'
+        )
+    )
+
+    client.addcom(
+        Command(
+            names=['roll', 'r'],
+            regexp=r'^__name__(\s*(?P<dice>(?P<count>\d*)d(?P<faces>\d+))\s*((?P<bonus_sign>\+|\-)(?P<bonus>\d*))?)?$',
+            function=roll,
+            usage='__author__ Usage: !roll [n]d[n] [+bonus]',
+            description='Rolls the dice. '
         )
     )
 
@@ -441,8 +440,10 @@ def run_bot(client: Cubot, token: str):
             time.sleep(60)
 
 
-if __name__ == '__main__':
+def main():
     try:
+        random.seed(time.time())
+
         parser = argparse.ArgumentParser(description='Create thumbnails for all images recursively bottom up.')
         parser.add_argument('--token', type=str, default='token', required=False,
                             help='Path to file with a discord login token: '
@@ -460,12 +461,16 @@ if __name__ == '__main__':
             log = Logger.create_logger(path=args.log, add_timestamps=not args.no_timestamps)
         bot = Cubot(log_commands=True, log_function=log, database=args.db)
         run_bot(bot, open(args.token, 'r').read().strip())
-    except Exception as exc:
-        builtins.print("Fatal exception thrown:")
-        builtins.print(exc)
+    except Exception as ex:
+        print("Fatal exception thrown:")
+        print(ex)
 
-        tb = '\n'.join(traceback.format_tb(exc.__traceback__))
+        tb = '\n'.join(traceback.format_tb(ex.__traceback__))
 
-        builtins.print(tb)
+        print(tb)
 
         exit(-1)
+
+
+if __name__ == '__main__':
+    main()

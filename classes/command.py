@@ -1,7 +1,8 @@
 import re
+import inspect
+import discord
 
 from classes.users import Users
-import discord
 
 
 class Command:
@@ -15,7 +16,7 @@ class Command:
             self,
             names: list,
             regexp: str,
-            command: callable,
+            function: callable,
             usage=None,
             description='',
             cmd_char='!',
@@ -24,7 +25,7 @@ class Command:
         Creates a command.
         :param names: Aliases of the command. First name is
         :param regexp: regex representation of messages that can be processed with this command
-        :param command: coroutine(**kwargs) -> bool:
+        :param function: coroutine(**kwargs) -> bool:
                         kwargs: arguments parsed from regexp groups + Command.command_parameters
         :param usage: String showing how the command should be called.
         :param description: String saying what command should do.
@@ -33,7 +34,9 @@ class Command:
         self.db = None
         self.cmd_char = cmd_char
         self.names = names
-        self.command = command
+
+        self.command = function
+
         self.re_list = [re.compile(regexp.replace('__name__', cmd_char + name)) for name in names]
 
         # check if regex contains invalid groups
@@ -101,3 +104,9 @@ class Command:
         string = string.replace('__name__', self.names[0])
         string = string.replace('__author__', f'<@{message.author.id}>')
         return string
+
+    def __repr__(self):
+        if self.names is None or len(self.names) == 0:
+            return f'<Command() - uninitialized'
+        else:
+            return f'<Command({self.names[0]}) -> {repr(self.command)}>'
