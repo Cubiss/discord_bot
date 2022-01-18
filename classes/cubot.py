@@ -8,10 +8,12 @@ from c__lib import yes_no_input
 from classes.reactor import Reactor
 from classes.users import Users
 from classes.command import Command
+from classes.module import Module
 
 
 class Cubot(discord.Client):
-    commands = list()
+    commands = []
+    modules = []
 
     def __init__(self,
                  database=None,
@@ -120,3 +122,27 @@ class Cubot(discord.Client):
 
         self.log(help_str)
         await message.channel.send(help_str)
+
+        pass
+
+    def load_modules(self, modules):
+        for cls in modules:
+            module: Module = Module('<Failed to load.>')
+            try:
+                module = cls(client=self, log=self.log)
+
+                self.add_module(module)
+
+                self.log(f'Loaded module {module.name}')
+            except Exception as ex:
+                self.log(f'Error loading module {module}: {ex}')
+
+    def add_module(self, module: Module):
+        if any(module.name == m.name for m in self.modules):
+            raise Exception(f"Module named '{module.name}' has alredy been added")
+
+        self.modules.append(module)
+
+        for command in module.commands:
+            self.addcom(command)
+

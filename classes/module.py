@@ -5,8 +5,10 @@ from classes.logger import Logger
 
 
 class Module:
-    def __init__(self, name: str, log: Logger = None):
+    def __init__(self, name: str, client=None, log: Logger = None):
+        from classes.cubot import Cubot
         self.name = name
+        self.client: Cubot = client
 
         self.commands = []
         if log is None:

@@ -4,7 +4,26 @@ from classes.module import *
 class UtilitiesModule(Module):
     def __init__(self, **kwargs):
         super().__init__("utilities", **kwargs)
-        pass
+
+        self.addcom(
+            Command(
+                names=['profilepicture', 'profilepic', 'pp'],
+                regexp=r'^__name__(\s*<@!?(?P<mention>\d*?)>)?$',
+                function=self.profile_picture,
+                usage='__author__ Usage: !profilepicture [@mention]',
+                description='Displays profile picture of you or a mentioned user.'
+            )
+        )
+
+        self.addcom(
+            Command(
+                names=['get_id'],
+                regexp=r'^__name__(\s+<@!?(?P<mention>\d*?)>)?$',
+                function=self.get_user_id,
+                usage='__author__ Usage: !get_id <@mention>',
+                description='Displays discord id of mentioned user. (For devs mainly.)'
+            )
+        )
 
     async def profile_picture(self, message: discord.Message, **kwargs) -> bool:
         """

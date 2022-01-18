@@ -1,302 +1,38 @@
 #!/usr/bin/python3
-import datetime
-import builtins
+import os
 import random
 import time
 import traceback
 import argparse
-import discord
-import numpy
 import signal
 
-from c__lib import seconds_to_czech_string
-from c__lib import format_table
-
-from classes.reactor import Reaction
-from classes.command import Command
 from classes.cubot import Cubot
 from classes.logger import Logger
-from classes.service import Service
-from classes.users import User
+from classes.module import Module
 
+
+def log(x):
+    print(x)
 
 #  ############################# COMMANDS #############################################################################
 
 
-async def classic_release(message: discord.Message, **__) -> bool:
-    time_str = seconds_to_czech_string(
-        (
-                datetime.datetime.now() - datetime.datetime(year=2019, month=8, day=27, hour=00, minute=00)
-        ).total_seconds())
+def load_modules():
+    for root, dirs, files in os.walk('modules'):
+        for f in files:
+            path = os.path.join(root, f)
+            if os.path.splitext(path)[1].lower() == '.py':
+                module_path = os.path.split(path)[0].replace('/', '\\').replace('\\', '.')
+                module_name = os.path.split(path)[1].replace('.py', '')
+                full_module_path = f'{module_path}.{module_name}'
 
-    await message.channel.send(f'Classic je venku už {time_str}!')
-
-    return True
-
-
-async def add_reactor(message: discord.Message, client: Cubot, **kwargs) -> bool:
-    if len(message.mentions) == 0:
-        await message.channel.send(f'{message.author.mention} you didn\'t mention anyone!')
-        return False
-
-    target = message.mentions[0]
-
-    emote = kwargs['emote']
-    chance = kwargs['percentage']
-    cooldown = kwargs['cooldown']
-    cooldown = 0 if cooldown is None or cooldown == '' else int(cooldown)
-
-    server = 0 if kwargs['percentage'] is None else message.guild.id
-
-    if chance.endswith('%'):
-        chance = float(chance.strip('%')) / 100
-    else:
-        chance = float(chance)
-
-    await message.channel.send(f'{message.author.mention} added a {emote} reactor to {target.mention}'
-                               f' with a chance of {chance * 100}% and cooldown of {cooldown} seconds.')
-
-    client.reactor.add(
-        Reaction(
-            user_id=target.id,
-            user_name=target.name,
-            server_id=server,
-            emote=emote,
-            chance=chance,
-            cooldown=cooldown
-        )
-    )
-
-    return True
-
-
-async def remove_reactor(message: discord.Message, client: Cubot, **kwargs) -> bool:
-    try:
-        reactor_id = int(kwargs['id'])
-    except ValueError:
-        await message.channel.send(f'{message.author.mention} specify which one!')
-        return False
-
-    removed = client.reactor.remove(reactor_id)
-
-    await message.channel.send(f'{message.author.mention} removed {removed} reactors.')
-
-    return True
-
-
-async def list_reactors(message: discord.Message, client: Cubot, **__) -> bool:
-    table = []
-
-    for r in client.reactor.reaction_list:
-        table.append(['`' + str(r.id), r.user_name, str(r.chance), str(r.cooldown), '`' + r.emote])
-
-    if len(table) == 0:
-        await message.channel.send(f'There are no reactors present yet.')
-        return True
-
-    s = format_table(table, header=['`ID', 'Username', 'Chance', 'Cooldown', 'Emote`'])
-
-    await message.channel.send(s)
-
-    return True
-
-
-async def change_username(message: discord.Message, client: Cubot, **__) -> bool:
-    await client.user.edit(username="Karel")
-    await message.channel.send(f'Yes, master.')
-
-    return True
-
-
-async def minecraft(message: discord.Message, user: User, cmd=None, **__) -> bool:
-    cmd = (cmd or '').lower()
-
-    if cmd not in ['', 'ip', 'status', 'start', 'stop', 'restart']:
-        await message.channel.send(f"Invalid command: {cmd}")
-        return True
-
-    s = Service('minecraft.service', use_dbus=False)
-    status_string = s.status_string()
-
-    if cmd in ['', 'ip']:
-        running = True
-        status = ''
-        address = 'cubiss.cz'
-        from subprocess import CalledProcessError
-        try:
-            running = s.is_running()
-            status = s.status_string()
-        except CalledProcessError:
-            pass
-
-        if running:
-            await message.channel.send(f'Minecraft server is running on {address}:\n{status})')
-        else:
-            await message.channel.send(f'Minecraft server is not running. Use "!minecraft start" to start it.\n'
-                                       f'It will run on {address}.')
-        return True
-
-    elif cmd == 'status':
-        await message.channel.send('Minecraft status:\n' + status_string)
-        return True
-
-    if user is not None and user.has_permission('minecraft'):
-        if cmd == 'start':
-            if s.is_running():
-                await message.channel.send('Minecraft is already running:\n' + status_string)
-            else:
                 try:
-                    s.start()
+                    __import__(full_module_path)
+                    log(f'Imported module: {full_module_path}')
                 except Exception as ex:
-                    await message.channel.send(f'Failed to start the server: {ex}')
-                    return False
-                await message.channel.send('Minecraft status:\n' + s.status_string())
-            return True
+                    log(f'Failed to import module {full_module_path}: {ex}')
 
-        elif cmd == 'stop':
-            if s.is_running():
-                try:
-                    s.stop()
-                except Exception as ex:
-                    await message.channel.send(f'Failed to start the server: {ex}')
-                    return False
-                await message.channel.send('Stopping minecraft server:\n' + s.status_string())
-            else:
-                await message.channel.send('Minecraft server is not running:\n' + status_string)
-            return True
-
-        elif cmd == 'restart':
-            try:
-                s.stop()
-            except Exception as ex:
-                await message.channel.send(f'Failed to start the server: {ex}')
-                return False
-            await message.channel.send('Restarting minecraft server:\n' + s.status_string())
-            return True
-    else:
-        await message.channel.send(f"You don't have permission for following command: {cmd}")
-        return True
-
-
-async def permissions(message: discord.Message, client: Cubot, **kwargs) -> bool:
-    from classes.users import Users, User
-    cmd = kwargs['command']
-    mention: discord.Member
-    mention = message.mentions[0] if len(message.mentions) > 0 else None
-    permission = kwargs['permission']
-
-    u: User
-    ul: Users = client.user_list
-
-    if cmd == 'add':
-        u = ul.get_or_create(mention)
-        if permission is None:
-            await message.channel.send(f"Usage: !permissions add @who permissoin")
-            return False
-        if permission in u.permissions:
-            await message.channel.send(f"{mention.nick or mention.display_name} already has that permission.")
-            return True
-        u.permissions.append(permission)
-        u.save()
-        await message.channel.send(f"Added '{permission}' permission to {mention.nick or mention.display_name}")
-    elif cmd == 'remove':
-        u = ul[mention.id]
-        if u is None or permission not in u.permissions:
-            await message.channel.send(f"{mention.display_name} doesn't have '{permission}' permission.")
-        else:
-            u.permissions.remove(permission)
-            u.save()
-            await message.channel.send(f"Removed '{permission}' permission from {mention.nick or mention.display_name}")
-    elif cmd == 'list':
-        if mention is not None:
-            u = ul[mention.id]
-            if u is None or len(u.permissions) == 0:
-                await message.channel.send(f"{mention.nick or mention.display_name} has no permissions.")
-            else:
-                await message.channel.send(f"{mention.nick or mention.display_name}'s permissions:\n"
-                                           f"{', '.join(u.permissions)}")
-        if permission is not None:
-            users = [u.name for u in ul if u.has_permission(permission)]
-            if len(users) == 0:
-                await message.channel.send(f"Nobody has '{permission}' permission.")
-            else:
-                await message.channel.send(f"Users with '{permission}' permissions:\n"
-                                           f"{', '.join(users)}")
-        pass
-    else:
-        await message.channel.send(f"Wrong command: '{cmd}'. Only one of following is available: add, remove, list")
-
-    return True
-
-
-async def random_iq(message: discord.Message, **__) -> bool:
-    mention: discord.Member
-    mention = message.mentions[0] if len(message.mentions) > 0 else None
-
-    iq = int(numpy.random.normal(100, 15))
-
-    await message.channel.send(f'{mention.name}\'s iq is {iq}.')
-
-    return True
-
-
-async def role_manager(message: discord.Message, **__) -> bool:
-
-    return True
-
-
-async def slap(message: discord.Message, **kwargs) -> bool:
-    # <person A> slaps <person B> around a bit with a large trout
-
-    user = message.author
-
-    if kwargs['mention'] is None:
-        target = message.guild.get_member(int(kwargs['mention']))
-    else:
-        return False
-
-    await message.channel.send(f'{user.name} slaps {target.name} around a bit with a large trout.')
-
-    return True
-
-
-async def roll(message: discord.Message, count, faces, bonus, **__) -> bool:
-
-    try:
-        if count is None or count == '':
-            count = 1
-        else:
-            count = int(count)
-
-        faces = int(faces)
-
-        if bonus is None or bonus == '':
-            bonus = 0
-        else:
-            bonus = int(bonus)
-    except:
-        return False
-
-    rolls = []
-    rolls_str = []
-
-    for i in range(0, count):
-        result = random.randint(1, faces) + bonus
-        rolls.append(result)
-        rolls_str.append(str(result))
-
-    bonus_msg = ""
-    if bonus > 0:
-        bonus_msg = f' with a bonus of {bonus}'
-
-    if len(rolls) == 1:
-        await message.channel.send(
-            f'Rolling d{faces}{bonus_msg}... Your rolled **{sum(rolls)}**!')
-    else:
-        await message.channel.send(
-            f'Rolling {count}d{faces}{bonus_msg}...\n {"... ".join(rolls_str)}... \nYour result is **{sum(rolls)}**!\nAverage roll was {sum(rolls)/len(rolls)}')
-
-    return True
+    return Module.__subclasses__()
 
 
 def run_bot(client: Cubot, token: str):
@@ -306,141 +42,22 @@ def run_bot(client: Cubot, token: str):
 
     signal.signal(signal.SIGINT, signal_handler)
 
-    client.addcom(
-        Command(
-            names=['profilepicture', 'profilepic', 'pp'],
-            regexp=r'^__name__(\s*<@!?(?P<mention>\d*?)>)?$',
-            function=profile_picture,
-            usage='__author__ Usage: !profilepicture [@mention]',
-            description='Displays profile picture of you or a mentioned user.'
-        )
-    )
+    client.load_modules(load_modules())
 
-    client.addcom(
-        Command(
-            names=['addreactor'],
-            regexp=r'^__name__\s*(?P<mention><@.*>)\s*(?P<emote><.*?>)'
-                   r'\s*(?P<percentage>\d?\.?\d+%?)\s*(?P<cooldown>\d*)\s*(?P<server>-server)?$',
-            function=add_reactor,
-            usage='__author__ Usage: !addreactor <@mention> <emote> <chance> [-server]',
-            description='Adds reactor.)',
-            permissions=['reactors']
-        )
-    )
-
-    client.addcom(
-        Command(
-            names=['listreactors'],
-            regexp=r'^__name__( .*)?$',
-            function=list_reactors,
-            usage=f'__author__ Usage: !listreactors',
-            description='Lists all reactors relevant to this server.',
-            permissions=['reactors']
-        )
-    )
-
-    client.addcom(
-        Command(
-            names=['removereactor'],
-            regexp=r'^__name__\s*(?P<id>\d*)\s*$',
-            function=remove_reactor,
-            usage=f'__author__ Usage: !removereactor <id>',
-            description='Removes a reactor.',
-            permissions=['reactors']
-        )
-    )
-
-    client.addcom(
-        Command(
-            names=['get_id'],
-            regexp=r'^__name__(\s+<@!?(?P<mention>\d*?)>)?$',
-            function=get_user_id,
-            usage='__author__ Usage: !permission <add|remove|list> [@mention] [permission_name]',
-            description='Displays discord id of mentioned user. (For devs mainly.)'
-        )
-    )
-
-    client.addcom(
-        Command(
-            names=['classic'],
-            regexp=r'^__name__( .*)?$',
-            function=classic_release,
-            usage=f'__author__ Usage: !classic',
-            description='Displays time since release of Classic WoW in czech language.'
-        )
-    )
-
-    client.addcom(
-        Command(
-            names=['love'],
-            regexp=r'^__name__( .*)?$',
-            function=love,
-            usage=f'__author__ Usage: !love',
-            description='Řekne jestli tě miluje.'
-        )
-    )
-
-    client.addcom(
-        Command(
-            names=['change_username', 'cu'],
-            regexp=r'^__name__ (?P<name>.*)$',
-            function=change_username,
-            usage=f'__author__ Usage: !change_username <username>',
-            description='Changes the bot''s username.',
-            permissions=['admin']
-        )
-    )
-
-    client.addcom(
-        Command(
-            names=['minecraft'],
-            regexp=r'^__name__\s*(?P<cmd>\S*)$',
-            function=minecraft,
-            usage=f'__author__ Usage: !minecraft',
-            description='Displays minecraft server\'s address.'
-        )
-    )
-
-    client.addcom(
-        Command(
-            names=['permissions', 'permission'],
-            regexp=r'^__name__\s+(?P<command>add|remove|list)(\s+<@!?(?P<mention>\d*?)>)?(\s+(?P<permission>.*?))?$',
-            function=permissions,
-            usage=f'__author__ Usage: !permissions <add|remove|list> [@who] [permission]',
-            description='Change permissions.'
-        )
-    )
-
-    client.addcom(
-        Command(
-            names=['iq'],
-            regexp=r'^__name__(\s*<@!?(?P<mention>\d*?)>)?$',
-            function=random_iq,
-            usage='__author__ Usage: !iq [@mention]',
-            description='Magically measures user\'s iq.'
-        )
-    )
-
-    client.addcom(
-        Command(
-            names=['roll', 'r'],
-            regexp=r'^__name__(\s*(?P<dice>(?P<count>\d*)d(?P<faces>\d+))\s*((?P<bonus_sign>\+|\-)(?P<bonus>\d*))?)?$',
-            function=roll,
-            usage='__author__ Usage: !roll [n]d[n] [+bonus]',
-            description='Rolls the dice. '
-        )
-    )
-
-    for tries in range(0, 30):
+    errors = 0
+    while 1:
         # noinspection PyBroadException
         try:
             client.run(token)
-        except Exception:
+        except Exception as ex:
             # todo: catch the right exception
-            time.sleep(60)
+            errors += 1
+            log(f'client.run Exception[{errors}]:\n{ex}')
+            time.sleep(15)
 
 
 def main():
+    global log
     try:
         random.seed(time.time())
 
