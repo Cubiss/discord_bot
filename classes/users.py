@@ -149,7 +149,7 @@ class Users:
     def create_permissions_table(self):
         c: sqlite3.Cursor = self.db.cursor()
         c.execute(
-            '''CREATE TABLE "Users" (
+            '''CREATE TABLE "Permissions" (
                 "USER_ID"	INTEGER NOT NULL,
                 "PERMISSION_ID"	TEXT,
                 PRIMARY KEY("USER_ID", "PERMISSION_ID")

@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import asyncio
 import os
 import random
 import time
@@ -6,9 +7,13 @@ import traceback
 import argparse
 import signal
 
+import c__lib
+
 from classes.cubot import Cubot
 from classes.logger import Logger
 from classes.module import Module
+
+from modules import *
 
 
 def log(x):
@@ -36,11 +41,20 @@ def load_modules():
 
 
 def run_bot(client: Cubot, token: str):
-    def signal_handler(_, __):
-        client.logout()
-        exit(0)
 
-    signal.signal(signal.SIGINT, signal_handler)
+    if c__lib.get_platform() == c__lib.platform_windows:
+        def signal_handler(_, __):
+            client.loop.stop()
+            exit(0)
+
+        signal.signal(signal.SIGINT, signal_handler)
+    else:
+        async def signal_handler():
+            await client.close()
+            client.loop.stop()
+
+        for signame in ('SIGINT', 'SIGTERM'):
+            client.loop.add_signal_handler(getattr(signal, signame), lambda: asyncio.create_task(signal_handler()))
 
     client.load_modules(load_modules())
 
@@ -49,6 +63,7 @@ def run_bot(client: Cubot, token: str):
         # noinspection PyBroadException
         try:
             client.run(token)
+            log(f'Client was stopped.')
         except Exception as ex:
             # todo: catch the right exception
             errors += 1

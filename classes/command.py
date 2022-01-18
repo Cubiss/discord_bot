@@ -37,7 +37,7 @@ class Command:
 
         self.command = function
 
-        self.re_list = [re.compile(regexp.replace('__name__', cmd_char + name)) for name in names]
+        self.re_list = [re.compile(regexp.replace('__name__', cmd_char + name), ) for name in names]
 
         # check if regex contains invalid groups
         for r in self.re_list:
