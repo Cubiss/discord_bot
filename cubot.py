@@ -51,7 +51,6 @@ def run_bot(client: Cubot, token: str):
     else:
         async def signal_handler():
             await client.close()
-            client.loop.stop()
 
         for signame in ('SIGINT', 'SIGTERM'):
             client.loop.add_signal_handler(getattr(signal, signame), lambda: asyncio.create_task(signal_handler()))
