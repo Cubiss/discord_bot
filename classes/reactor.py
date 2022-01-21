@@ -37,7 +37,8 @@ class Reaction:
 
 
 class Reactor:
-    def __init__(self, db: sqlite3.Connection):
+    def __init__(self, db: sqlite3.Connection, log):
+        self.log = log
         self.reaction_list = []
         self.db = db
         if not self.table_exists():
@@ -72,7 +73,9 @@ class Reactor:
     def get_reactions(self, user_id, server_id):
         retval = []
         for reaction in [r for r in self.reaction_list if r.user_id == user_id and r.server_id == server_id]:
-            if reaction.chance > random.random():
+            r = random.random()
+            self.log(f'{user_id}: {reaction.chance}|{r}')
+            if reaction.chance > r:
                 if datetime.datetime.now() > reaction.last_used + datetime.timedelta(seconds=reaction.cooldown):
                     retval.append(reaction.emote.replace('<', '').replace('>', ''))
                     reaction.last_used = datetime.datetime.now()

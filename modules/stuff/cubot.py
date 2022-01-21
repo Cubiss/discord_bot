@@ -23,7 +23,7 @@ class CubotModule(Module):
         self.addcom(
             Command(
                 names=['iq'],
-                regexp=r'^__name__(\s*<@!?(?P<mention>\d*?)>)?$',
+                regexp=r'^__name__\s*(<@!?(?P<mention>\d*?)>)?$',
                 function=self.random_iq,
                 usage='__author__ Usage: !iq [@mention]',
                 description='Magically measures user\'s iq.'
@@ -42,7 +42,7 @@ class CubotModule(Module):
 
     async def random_iq(self, message: discord.Message, **__) -> bool:
         mention: discord.Member
-        mention = message.mentions[0] if len(message.mentions) > 0 else None
+        mention = message.mentions[0] if len(message.mentions) > 0 else message.author
 
         iq = int(numpy.random.normal(100, 15))
 

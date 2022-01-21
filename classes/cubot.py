@@ -44,7 +44,7 @@ class Cubot(discord.Client):
         self.log_commands = log_commands
         self.log = log_function
         
-        self.reactor = Reactor(self.database)
+        self.reactor = Reactor(self.database, log_function)
 
         self.user_list = Users(self.database)
 

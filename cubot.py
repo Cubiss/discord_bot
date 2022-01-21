@@ -63,6 +63,7 @@ def run_bot(client: Cubot, token: str):
         try:
             client.run(token)
             log(f'Client was stopped.')
+            break
         except Exception as ex:
             # todo: catch the right exception
             errors += 1
