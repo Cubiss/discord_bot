@@ -1,3 +1,4 @@
+import asyncio
 import random
 import cubot
 from classes.module import *
@@ -51,7 +52,7 @@ class HappyAdventureModule(Module):
             )
         )
 
-    async def roll(self, message: discord.Message, count, faces, bonus, **__) -> bool:
+    async def roll(self, message: discord.Message, count, faces, bonus, log, **__) -> bool:
         try:
             if count is None or count == '':
                 count = 1
@@ -77,6 +78,9 @@ class HappyAdventureModule(Module):
             result = random.randint(1, faces) + bonus
             rolls.append(result)
             rolls_str.append(str(result))
+            if i % 420 == 0:
+                # return control to the event loop
+                await asyncio.sleep(0)
 
         bonus_msg = ""
         if bonus > 0:

@@ -105,7 +105,7 @@ class Cubot(discord.Client):
                                  )
 
                     await asyncio.wait_for(
-                        command.run(message, self, self.user_list),
+                        command.run(message=message, client=self, users=self.user_list, log=self.log),
                         command.timeout
                     )
 

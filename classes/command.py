@@ -66,7 +66,7 @@ class Command:
         else:
             return False
 
-    def run(self, message: discord.Message, client: discord.Client, users: Users):
+    def run(self, message: discord.Message, client: discord.Client, users: Users, log):
         # check access
         if self.permissions is not None and len(self.permissions) > 0:
             u = users[message.author.id]
@@ -95,7 +95,8 @@ class Command:
             'message': message,
             'db': self.db,
             'client': client,
-            'user': users[message.author.id]
+            'user': users[message.author.id],
+            'log': log
         }
 
         params.update(match.groupdict())
