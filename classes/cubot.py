@@ -101,9 +101,9 @@ class Cubot(discord.Client):
                     )
                     if self.log_commands:
                         self.log(f'[{datetime.datetime.now()}]'
-                                          f'[{message.guild.name}]'
-                                          f'{message.author}: '
-                                          f'{message.content}')
+                                 f'[{message.guild.name}]'
+                                 f'{message.author}: '
+                                 f'{message.content}')
                 except asyncio.TimeoutError:
                     await message.reply(command.format_message(
                         f"__author__ Sorry, I don't have enough time for this.", message))
@@ -112,11 +112,6 @@ class Cubot(discord.Client):
                     self.log(message.content)
                     self.log(ex)
                     raise
-
-    async def on_reaction_add(self, reaction, user):
-        if user == self.user:
-            return
-        pass
 
     async def help(self, message: discord.Message):
         help_str = '```'
@@ -162,4 +157,3 @@ class Cubot(discord.Client):
     def stop(self):
         self.running = False
         pass
-

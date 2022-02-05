@@ -13,11 +13,7 @@ from classes.cubot import Cubot
 from classes.logger import Logger
 from classes.module import Module
 
-from modules import *
-
-
-def log(x):
-    print(x)
+log = None
 
 #  ############################# COMMANDS #############################################################################
 
@@ -46,7 +42,6 @@ def run_bot(client: Cubot, token: str):
             client.stop()
             client.loop.stop()
 
-
         signal.signal(signal.SIGINT, signal_handler)
     else:
         async def signal_handler():
@@ -65,6 +60,8 @@ def run_bot(client: Cubot, token: str):
             client.run(token)
             break
         except Exception as ex:
+            if not client.running:
+                break
             # todo: catch the right exception
             errors += 1
             log(f'client.run Exception[{errors}]:\n{ex}')
@@ -106,4 +103,5 @@ def main():
 
 
 if __name__ == '__main__':
+    def log(x): print(x)
     main()
