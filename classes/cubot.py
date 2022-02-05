@@ -95,16 +95,23 @@ class Cubot(discord.Client):
         for command in self.commands:
             if command.can_run(message):
                 try:
-                    await asyncio.wait_for(
-                        command.run(message, self, self.user_list),
-                        command.timeout
-                    )
                     if self.log_commands:
                         self.log(f'[{datetime.datetime.now()}]'
                                  f'[{message.guild.name}]'
                                  f'{message.author}: '
-                                 f'{message.content}')
+                                 f'{message.content}'
+                                 ' -> '
+                                 f'{command.names[0]} timeout: {command.timeout}'
+                                 )
+
+                    await asyncio.wait_for(
+                        command.run(message, self, self.user_list),
+                        command.timeout
+                    )
+
                 except asyncio.TimeoutError:
+                    if self.log_commands:
+                        self.log(f'{command.names[0]} timed out.')
                     await message.reply(command.format_message(
                         f"__author__ Sorry, I don't have enough time for this.", message))
                 except Exception as ex:
