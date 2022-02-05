@@ -1,3 +1,5 @@
+import asyncio
+
 import discord
 import datetime
 import sqlite3
@@ -52,6 +54,7 @@ class Cubot(discord.Client):
         intents.members = True
         kwargs['intents'] = intents
 
+        self.running = True
         super(Cubot, self).__init__(*args, **kwargs)
 
     def addcom(self, command: Command):
@@ -92,12 +95,18 @@ class Cubot(discord.Client):
         for command in self.commands:
             if command.can_run(message):
                 try:
-                    await command.run(message, self, self.user_list)
+                    await asyncio.wait_for(
+                        command.run(message, self, self.user_list),
+                        command.timeout
+                    )
                     if self.log_commands:
                         self.log(f'[{datetime.datetime.now()}]'
                                           f'[{message.guild.name}]'
                                           f'{message.author}: '
                                           f'{message.content}')
+                except asyncio.TimeoutError:
+                    await message.reply(command.format_message(
+                        f"__author__ Sorry, I don't have enough time for this.", message))
                 except Exception as ex:
                     self.log(message.author)
                     self.log(message.content)
@@ -145,4 +154,12 @@ class Cubot(discord.Client):
 
         for command in module.commands:
             self.addcom(command)
+
+    async def start(self, *args, **kwargs):
+        self.running = True
+        await super().start(*args, **kwargs)
+
+    def stop(self):
+        self.running = False
+        pass
 

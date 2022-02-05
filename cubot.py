@@ -41,15 +41,16 @@ def load_modules():
 
 
 def run_bot(client: Cubot, token: str):
-
     if c__lib.get_platform() == c__lib.platform_windows:
         def signal_handler(_, __):
+            client.stop()
             client.loop.stop()
-            exit(0)
+
 
         signal.signal(signal.SIGINT, signal_handler)
     else:
         async def signal_handler():
+            client.stop()
             await client.close()
 
         for signame in ('SIGINT', 'SIGTERM'):
@@ -58,17 +59,17 @@ def run_bot(client: Cubot, token: str):
     client.load_modules(load_modules())
 
     errors = 0
-    while 1:
+    while client.running:
         # noinspection PyBroadException
         try:
             client.run(token)
-            log(f'Client was stopped.')
             break
         except Exception as ex:
             # todo: catch the right exception
             errors += 1
             log(f'client.run Exception[{errors}]:\n{ex}')
             time.sleep(15)
+    log(f'Client was stopped.')
 
 
 def main():

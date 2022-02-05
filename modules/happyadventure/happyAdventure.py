@@ -1,5 +1,4 @@
 import random
-
 import cubot
 from classes.module import *
 from classes.service import Service
@@ -57,14 +56,17 @@ class HappyAdventureModule(Module):
             if count is None or count == '':
                 count = 1
             else:
-                count = int(count)
+                count = abs(int(count))
 
-            faces = int(faces)
+            faces = abs(int(faces))
 
             if bonus is None or bonus == '':
                 bonus = 0
             else:
-                bonus = int(bonus)
+                bonus = abs(int(bonus))
+
+            if count > 100000:
+                await message.channel.send(f'For real?!')
         except:
             return False
 
@@ -84,8 +86,14 @@ class HappyAdventureModule(Module):
             await message.channel.send(
                 f'Rolling d{faces}{bonus_msg}... Your rolled **{sum(rolls)}**!')
         else:
-            await message.channel.send(
-                f'Rolling {count}d{faces}{bonus_msg}...\n {"... ".join(rolls_str)}... \nYour result is **{sum(rolls)}**!\nAverage roll was {sum(rolls) / len(rolls)}')
+            avgstr = f'{sum(rolls) / len(rolls):.2f}'
+
+            msg = f'Rolling {count}d{faces}{bonus_msg}...\n {"... ".join(rolls_str)}... \nYour result is **{sum(rolls)}**!\nAverage roll was {avgstr}'
+
+            if len(msg) > 1900:
+                msg = f'Rolling {count}d{faces}{bonus_msg}... \nYour result is **{sum(rolls)}**!\nAverage roll was {avgstr}'
+
+            await message.channel.send(msg)
 
         return True
 

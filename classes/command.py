@@ -20,7 +20,8 @@ class Command:
             usage=None,
             description='',
             cmd_char='!',
-            permissions: list = None):
+            permissions: list = None,
+            timeout=10):
         """
         Creates a command.
         :param names: Aliases of the command. First name is
@@ -52,6 +53,8 @@ class Command:
         if type(permissions) == str:
             permissions = [permissions]
         self.permissions = permissions
+
+        self.timeout = timeout
 
     def can_run(self, message: discord.Message):
         for name in self.names:
