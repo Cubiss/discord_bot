@@ -38,7 +38,8 @@ class HappyAdventureModule(Module):
                 regexp=r'^__name__\s*(\<\#(?P<channel>\d*)\>)?\s*(?P<text>(.|\n)*)?$',
                 function=self.send,
                 usage='__author__ Usage: !roll [#channel] Your message.',
-                description='Sends a message in a channel.'
+                description='Sends a message in a channel.',
+                permissions=['happyadmin']
             )
         )
 
@@ -48,7 +49,8 @@ class HappyAdventureModule(Module):
                 regexp=r'^__name__\s*\<\#(?P<channel>\d*)\>\s*(?P<text>.*)?$',
                 function=self.setsend,
                 usage='__author__ Usage: !setsay #channel',
-                description='Sets a channel for !say command.'
+                description='Sets a channel for !say command.',
+                permissions=['happyadmin']
             )
         )
 
