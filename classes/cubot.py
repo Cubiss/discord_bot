@@ -96,12 +96,11 @@ class Cubot(discord.Client):
             if command.can_run(message):
                 try:
                     if self.log_commands:
-                        self.log(f'[{datetime.datetime.now()}]'
-                                 f'[{message.guild.name}]'
+                        self.log(f'[{message.guild.name}]'
                                  f'{message.author}: '
                                  f'{message.content}'
                                  ' -> '
-                                 f'{command.names[0]} timeout: {command.timeout}'
+                                 f'Command: {command.names[0]}, Timeout: {command.timeout}'
                                  )
 
                     await asyncio.wait_for(
