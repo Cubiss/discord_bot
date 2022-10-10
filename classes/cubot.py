@@ -31,17 +31,8 @@ class Cubot(discord.Client):
         :param args: passed to discord.py constructor
         :param kwargs: passed to discord.py constructor
         """
-        if database is sqlite3.Connection:
-            self.database = database
-        elif type(database) == str or database is None:
-            if database is None:
-                database = 'cubot.db'
-            if os.path.isfile(database):
-                self.database = sqlite3.connect(database)
-            elif yes_no_input('Database file not found. Should I create and initialize a new one? [y/n]'):
-                self.database = sqlite3.connect(database)
-            else:
-                raise Exception('Database file not found.')
+
+        self.db_init(database)
 
         self.log_commands = log_commands
         self.log = log_function
@@ -57,6 +48,21 @@ class Cubot(discord.Client):
         self.running = True
         super(Cubot, self).__init__(*args, **kwargs)
 
+    def db_init(self, database):
+        try:
+            if database is sqlite3.Connection:
+                self.database = database
+            elif type(database) == str or database is None:
+                if database is None:
+                    database = 'cubot.db'
+                if os.path.isfile(database):
+                    self.database = sqlite3.connect(database)
+                elif yes_no_input('Database file not found. Should I create and initialize a new one? [y/n]'):
+                    self.database = sqlite3.connect(database)
+                else:
+                    raise Exception('Database file not found.')
+        except Exception as ex:
+            raise Exception(f"Failed to initialize database: ({type(database)}){database}\n{ex}")
     def addcom(self, command: Command):
         names = []
         for n in [cmd.names for cmd in self.commands]:

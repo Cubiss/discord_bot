@@ -13,7 +13,6 @@ class Logger:
     def log(self, *args, **kwargs):
         if self.add_timestamps and len(args) > 0:
             args = (datetime.datetime.now(), ) + args
-
         if self.file is not None:
             if 'file' not in kwargs or self.log_file_writes or kwargs['file'] in [sys.stderr, sys.stdout]:
                 fkwargs = kwargs.copy()
@@ -21,7 +20,6 @@ class Logger:
 
                 print(*args, **fkwargs)
                 self.file.flush()
-
             pass
         if self.use_stdout:
             print(*args, **kwargs)
