@@ -57,14 +57,18 @@ def run_bot(client: Cubot, token: str):
     while client.running:
         # noinspection PyBroadException
         try:
-            client.run(token)
-            break
+            try:
+                client.run(token)
+                break
+            except RuntimeError as ex:
+                asyncio.set_event_loop(asyncio.new_event_loop())
+                pass
         except Exception as ex:
             if not client.running:
                 break
             # todo: catch the right exception
             errors += 1
-            log(f'client.run Error #{errors}:\n{type(ex)}\n{ex}')
+            log(f'client.run Error #{errors}:\nType: {type(ex)}\nMessage: {ex}\n********************')
             time.sleep(15)
     log(f'Client was stopped.')
 
