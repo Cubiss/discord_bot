@@ -1,9 +1,7 @@
 import asyncio
 import random
-import cubot
 from classes.module import *
-from classes.service import Service
-from classes.users import User
+from .characters import Characters, Character
 
 
 class HappyAdventureModule(Module):
@@ -13,24 +11,27 @@ class HappyAdventureModule(Module):
         self.channel = None
 
         self.addcom(
-            Command(
-                names=['roll', 'r'],
-                regexp=r'^__name__(\s*(?P<dice>(?P<count>\d*)d(?P<faces>\d+))\s*((?P<bonus_sign>\+|\-)(?P<bonus>\d*))?)?$',
-                function=self.roll,
-                usage='__author__ Usage: !roll [n]d[n] [+bonus]',
-                description='Rolls the dice. '
-            )
+            Command(names=['roll', 'r'],
+                    function=self.roll, usage='__author__ Usage: !roll [n]d[n] [+bonus]',
+                    description='Rolls the dice. ',
+                    positional_parameters={
+                        'dice': r'((?P<count>\d*)d(?P<faces>\d+))?',
+                        'bonus_info': r'((?P<bonus_sign>\+|\-)(?P<bonus>\d*))?'
+                    }
+                    )
         )
 
         self.addcom(
             Command(
-                names=['rollstats', 'rs'],
-                regexp=r'^__name__(\s*(?P<dice>(?P<count>\d*)d(?P<faces>\d+))\s*((?P<bonus_sign>\+|\-)(?P<bonus>\d*))?)?$',
-                function=self.rollstats,
-                usage='__author__ Usage: !roll [n]d[n] [+bonus]',
-                description='Rolls the dice. '
+                names=['character create', 'char create'],
+                function=self.character_create,
+                positional_parameters=['name'],
+                optional_parameters=['description', 'hp', 'armor']
             )
         )
+
+        self.characters = Characters(self.db)
+        self.characters.load()
 
     async def roll(self, message: discord.Message, count, faces, bonus, log, **__) -> bool:
         try:
@@ -81,10 +82,26 @@ class HappyAdventureModule(Module):
 
         return True
 
-    async def rollstats(self, count, faces, bonus):
-        max_roll = faces * count
-        probabilities = []
-        for i in range(1, 20):
-            probabilities[i] = 1
+    async def character(self, command, **kwargs):
+        try:
+            command = command.lower()
 
-        print(probabilities)
+            if command == 'create':
+                await self.character_create(**kwargs)
+                pass
+            elif command == 'select':
+                pass
+            else:
+                raise Exception(f"Unknown command: {command}")
+        except Exception as ex:
+            pass
+
+    async def character_create(self, message: discord.Message, name, description, hp, armor, **__):
+        char: Character
+        char = self.characters.create()
+        char.USER_ID = message.author.id
+        char.NAME = name
+        char.DESCRIPTION = description
+        char.HP = hp
+        char.ARMOR = armor
+        char.save()

@@ -1,8 +1,7 @@
 import re
-import inspect
 import discord
 
-from classes.users import Users
+from modules.users.users import Users, User
 
 
 class Command:
@@ -12,41 +11,42 @@ class Command:
     # client: reference to Cubot
     command_parameters = ['message', 'db', 'client', 'user']
 
-    def __init__(
-            self,
-            names: list,
-            regexp: str,
-            function: callable,
-            usage=None,
-            description='',
-            cmd_char='!',
-            permissions: list = None,
-            timeout=5):
+    _param_prefabs = {
+        '__integer__': r'\d*',
+        '__mention__': r'<@(?P<__value__>.*?)>',
+        '__number__': r'\d?\.?\d+%?',
+        '__any__': r'.*?'
+    }
+
+    def __init__(self, names: list, function: callable, usage=None, description='',
+                 permissions: list = None, timeout=5, flags=None, positional_parameters=None, optional_parameters=None):
         """
         Creates a command.
+        :param optional_parameters: Automatically generated string parameters
         :param names: Aliases of the command. First name is
-        :param regexp: regex representation of messages that can be processed with this command
         :param function: coroutine(**kwargs) -> bool:
                         kwargs: arguments parsed from regexp groups + Command.command_parameters
         :param usage: String showing how the command should be called.
         :param description: String saying what command should do.
-        :param cmd_char: String every command will start with.
         """
         self.db = None
-        self.cmd_char = cmd_char
         self.names = names
 
-        self.command = function
+        self.function = function
 
-        self.re_list = [re.compile(regexp.replace('__name__', cmd_char + name), ) for name in names]
+        self.flags = flags or {}
+        self.positional_parameters = self.replace_prefabs(positional_parameters) or {}
+        self.optional_parameters = self.replace_prefabs(optional_parameters) or {}
+
+        self.regex = self.update_regexp()
 
         # check if regex contains invalid groups
-        for r in self.re_list:
-            for group_name in r.groupindex:
-                if group_name in Command.command_parameters:
-                    raise Exception(f"Wrong command regexp: group name '{group_name}' is reserved.")
+        for group_name in self.regex.groupindex:
+            if group_name in Command.command_parameters:
+                raise Exception(f"Wrong command regexp: group name '{group_name}' is reserved.")
 
-        self.usage = usage or f'Command is in wrong format: {self.re_list[0].pattern}'
+        self.usage = usage or self.build_usage()
+
         self.description = description
         if permissions is None:
             permissions = []
@@ -56,38 +56,40 @@ class Command:
 
         self.timeout = timeout
 
-    def can_run(self, message: discord.Message):
+    def is_match(self, text: str):
         for name in self.names:
-            if message.content.lower().startswith(self.cmd_char + name):
-                if len(message.content.lower()) > len(self.cmd_char + name):
-                    if not message.content.lower()[len(self.cmd_char + name)].isspace():
-                        continue
+            if text.lower().startswith(name):
+                if len(text.lower()) > len(name) and not text.lower()[len(name)].isspace():
+                    # this name is longer than my name
+                    continue
                 return True
         else:
             return False
 
-    def run(self, message: discord.Message, client: discord.Client, users: Users, log):
-        # check access
-        if self.permissions is not None and len(self.permissions) > 0:
-            u = users[message.author.id]
-            if u is not None and \
-               ('admin' in u.permissions or any(p in u.permissions for p in self.permissions)):
-                # user has an appropriate permission
-                pass
+    def user_has_permission(self, user):
+        if type(user) is User:
+            if self.permissions is not None and len(self.permissions) > 0:
+                if any(user.has_permission(perm) for perm in self.permissions):
+                    # user has an appropriate permission
+                    return True
+                else:
+                    # user cannot use this command
+                    return False
             else:
-                # user cannot use this command
-                return message.channel.send(
-                    self.format_message(
-                        message=message, string="__author__ you can't do that!"))
-
-        # get regex parsed arguments
-        for regex in self.re_list:
-            match = regex.match(message.content)
-            if match is not None:
-                break
+                return True
         else:
+            raise Exception(f"user_has_permission not implemented for {type(user)}")
+
+    async def execute(self, message: discord.Message, client: discord.Client, users: Users, log, text=None):
+        if not self.user_has_permission(users.get_or_create(message.author)):
+            return await message.channel.send(self._format_message(message=message,
+                                                                   string="__author__ you can't do that!"))
+        # get regex parsed arguments
+
+        match = self.regex.match(text or message.content)
+        if match is None:
             # no regex match found, return a usage message
-            return message.channel.send(self.format_message(message=message, string=self.usage))
+            return await message.channel.send(self._format_message(message=message, string=self.usage))
 
         # parse arguments for the command function
 
@@ -96,15 +98,22 @@ class Command:
             'db': self.db,
             'client': client,
             'user': users[message.author.id],
+            'users': users,
             'log': log
         }
 
         params.update(match.groupdict())
 
         # finally run the command code
-        return self.command(**params)
+        return await self.function(**params)
 
-    def format_message(self, string: str, message: discord.Message):
+    async def send_help(self, message: discord.Message):
+        await message.channel.send(self._format_message(message=message,
+                                                        string=','.join(self.names) + '\n' + self.description + '\n' + self.usage))
+
+    def _format_message(self, string: str, message: discord.Message):
+        if string is None:
+            return None
         string = string.replace('__name__', self.names[0])
         string = string.replace('__author__', f'<@{message.author.id}>')
         return string
@@ -113,4 +122,75 @@ class Command:
         if self.names is None or len(self.names) == 0:
             return f'<Command() - uninitialized'
         else:
-            return f'<Command({self.names[0]}) -> {repr(self.command)}>'
+            return f'<Command({self.names[0]}) -> {repr(self.function)}>'
+
+    def update_regexp(self):
+        regexp = "^__name__"
+
+        if self.flags is not None:
+            flags = {}
+            for f in self.flags:
+                flags[f] = rf'\s*(?P<{f}>{self.flags[f]})\s*'
+
+            regexp += f'(?P<_flags>({"|".join(flags.values())})*)'
+
+        if self.positional_parameters is not None:
+            if type(self.positional_parameters) is list:
+                self.positional_parameters = dict.fromkeys(self.positional_parameters, r'.*?')
+
+            for param in self.positional_parameters:
+                # full = self.positional_parameters[param]
+                # spaceless = self.positional_parameters[param].replace(".", r"\S")
+
+                regexp += rf'\s*(?P<{param}>{self.positional_parameters[param]})\s*'
+
+        if self.optional_parameters is not None:
+            optional_parameters = {}
+            for param in self.optional_parameters:
+                # full = self.optional_parameters[param]
+                # spaceless = self.optional_parameters[param].replace(".", r"\S")
+
+                real_name = param[1:] if param[0] == '_' else param
+
+                optional_parameters[param] = rf'(\s*{real_name}=(?P<{param}>{self.optional_parameters[param]})\s*)'
+
+            regexp += rf'\s*(?P<_optional_params>({"|".join(optional_parameters.values())})*)'
+
+        names = "|".join(self.names)
+        regexp = regexp.replace("__name__", f'({names})')
+
+        self.regex = re.compile(regexp)
+        return self.regex
+
+    def replace_prefabs(self, params: dict):
+        if params is None:
+            return None
+
+        if type(params) is list:
+            params = dict.fromkeys(params, '__any__')
+
+        param_names = list(params.keys())
+
+        for param_name in param_names:
+            param = params[param_name]
+            for prefab_name, prefab in self._param_prefabs.items():
+                if prefab_name in param:
+                    if '__value__' in prefab:
+                        prefab = prefab.replace('__value__', param_name)
+                        params.pop(param_name)
+                        param_name = '_' + param_name
+                    params[param_name] = param.replace(prefab_name, f'({prefab})')
+
+        return params
+
+    def build_usage(self):
+        usage = f'Usage: {self.names[0]} '
+        for f in self.flags:
+            usage += f'[{f}] '
+
+        for p in self.positional_parameters:
+            usage += f'<{p}> '
+
+        for opt in self.optional_parameters:
+            usage += f'[{opt}]'
+        return usage

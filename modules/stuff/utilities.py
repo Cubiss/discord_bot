@@ -6,36 +6,27 @@ class UtilitiesModule(Module):
         super().__init__("utilities", **kwargs)
 
         self.addcom(
-            Command(
-                names=['profilepicture', 'profilepic', 'pp'],
-                regexp=r'^__name__(\s*<@!?(?P<mention>\d*?)\s*(?P<global>-g|--global|-global)?>)?\s*$',
-                function=self.profile_picture,
-                usage='__author__ Usage: !profilepicture [@mention][--global]',
-                description='Displays profile picture of you or a mentioned user.'
-            )
+            Command(names=['profilepicture', 'profilepic', 'pp'],
+                    function=self.profile_picture, usage='__author__ Usage: !profilepicture [@mention][--global]',
+                    description='Displays profile picture of you or a mentioned user.',
+                    flags={
+                        'is_global': '--global'},
+                    positional_parameters={
+                        'mention': '__mention__?',
+                    }
+                    )
         )
 
         self.addcom(
-            Command(
-                names=['get_id'],
-                regexp=r'^__name__(\s+<@!?(?P<mention>\d*?)>)?$',
-                function=self.get_user_id,
-                usage='__author__ Usage: !get_id <@mention>',
-                description='Displays discord id of mentioned user. (For devs mainly.)'
-            )
+            Command(names=['get_id'], function=self.get_user_id,
+                    positional_parameters={
+                        'mention': '__mention__'
+                    },
+                    usage='__author__ Usage: !get_id <@mention>',
+                    description='Displays discord id of mentioned user. (For devs mainly.)')
         )
 
-        self.addcom(
-            Command(
-                names=['user_list'],
-                regexp=r'^__name__(?P<id>.*)?$',
-                function=self.get_user_id,
-                usage='__author__ Usage: !get_id <@mention>',
-                description='Displays discord id of mentioned user. (For devs mainly.)'
-            )
-        )
-
-    async def profile_picture(self, message: discord.Message, **kwargs) -> bool:
+    async def profile_picture(self, message: discord.Message, mention, **kwargs) -> bool:
         """
         Displays full sized profile picture of either user or a mentioned member.
         :param message:
@@ -43,8 +34,8 @@ class UtilitiesModule(Module):
         :return:
         """
 
-        if kwargs['mention'] is not None:
-            user = message.guild.get_member(int(kwargs['mention']))
+        if mention is not None:
+            user = message.guild.get_member(int(mention))
         else:
             user = message.author
 
@@ -84,11 +75,3 @@ class UtilitiesModule(Module):
             f'{str(user)}\'s id: {user.id}'
         )
         return True
-
-    async def list_role_members(self, message: discord.Message, id, **kwargs):
-        members = message.guild.members
-
-        print(id)
-
-        for m in members:
-            print(m)

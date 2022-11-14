@@ -21,6 +21,9 @@ log = None
 def load_modules():
     for root, dirs, files in os.walk('modules'):
         for f in files:
+            if f != '__init__.py':
+                continue
+
             path = os.path.join(root, f)
             if os.path.splitext(path)[1].lower() == '.py':
                 module_path = os.path.split(path)[0].replace('/', '\\').replace('\\', '.')
@@ -29,7 +32,7 @@ def load_modules():
 
                 try:
                     __import__(full_module_path)
-                    log(f'Imported module: {full_module_path}')
+                    log(f'Imported module: {module_path}')
                 except Exception as ex:
                     log(f'Failed to import module {full_module_path}: {ex}')
 

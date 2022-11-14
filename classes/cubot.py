@@ -4,11 +4,11 @@ import discord
 import datetime
 import sqlite3
 import os
+import re
 
 from c__lib import yes_no_input
 
-from classes.reactor import Reactor
-from classes.users import Users
+from modules.users.users import Users
 from classes.command import Command
 from classes.module import Module
 
@@ -21,6 +21,7 @@ class Cubot(discord.Client):
                  database=None,
                  log_commands=False,
                  log_function=print,
+                 command_character='!',
                  *args, **kwargs):
         """
         Inits discord.Client and Cubot
@@ -32,14 +33,15 @@ class Cubot(discord.Client):
         :param kwargs: passed to discord.py constructor
         """
 
-        self.db_init(database)
+        self.command_character = command_character
+
+        self.database = self._db_init(database)
 
         self.log_commands = log_commands
         self.log = log_function
-        
-        self.reactor = Reactor(self.database, log_function)
 
         self.user_list = Users(self.database)
+        self.user_list.load()
 
         intents = discord.Intents.default()
         intents.members = True
@@ -48,21 +50,23 @@ class Cubot(discord.Client):
         self.running = True
         super(Cubot, self).__init__(*args, **kwargs)
 
-    def db_init(self, database):
+    @staticmethod
+    def _db_init(database):
         try:
             if database is sqlite3.Connection:
-                self.database = database
+                return database
             elif type(database) == str or database is None:
                 if database is None:
                     database = 'cubot.db'
                 if os.path.isfile(database):
-                    self.database = sqlite3.connect(database)
+                    return sqlite3.connect(database)
                 elif yes_no_input('Database file not found. Should I create and initialize a new one? [y/n]'):
-                    self.database = sqlite3.connect(database)
+                    return sqlite3.connect(database)
                 else:
                     raise Exception('Database file not found.')
         except Exception as ex:
             raise Exception(f"Failed to initialize database: ({type(database)}){database}\n{ex}")
+
     def addcom(self, command: Command):
         names = []
         for n in [cmd.names for cmd in self.commands]:
@@ -87,19 +91,28 @@ class Cubot(discord.Client):
         self.log('------')
 
     async def on_message(self, message: discord.Message):
+        # ignore bot's messages
         if message.author == self.user:
             return
 
+        # handle help here explicitely
         if message.content.startswith('!help'):
             return await self.help(message)
 
-        for e in self.reactor.get_reactions(message.author.id, message.guild.id):
-            await message.add_reaction(emoji=e)
-            self.log(f"Adding reaction to {message.author.name}: {e}")
+        # handle all modules
+        for m in sorted(self.modules, key=lambda module: module.on_message_hook_priority):
+            m: Module
+            await m.on_message(message)
+
+        # check for command char
+        if not message.content.startswith(self.command_character):
+            return
+
+        text = message.content[len(self.command_character):]
 
         command: Command
         for command in self.commands:
-            if command.can_run(message):
+            if command.is_match(text):
                 try:
                     if self.log_commands:
                         self.log(f'[{message.guild.name}]'
@@ -110,14 +123,14 @@ class Cubot(discord.Client):
                                  )
 
                     await asyncio.wait_for(
-                        command.run(message=message, client=self, users=self.user_list, log=self.log),
+                        command.execute(message=message,text=text, client=self, users=self.user_list, log=self.log),
                         command.timeout
                     )
 
                 except asyncio.TimeoutError:
                     if self.log_commands:
                         self.log(f'{command.names[0]} timed out.')
-                    await message.reply(command.format_message(
+                    await message.reply(command._format_message(
                         f"__author__ Sorry, I don't have enough time for this.", message))
                 except Exception as ex:
                     self.log(message.author)
@@ -126,20 +139,36 @@ class Cubot(discord.Client):
                     raise
 
     async def help(self, message: discord.Message):
-        help_str = '```'
-        help_str += 'Available commands:\n'
+        regex = re.compile('!help( (?P<name>.*))?')
 
-        max_command_len = max([len(c.names[0]) for c in self.commands])
+        if (m := regex.match(message.content)) is not None:
+            m: re.Match
+            name = m.group('name')
 
-        for command in self.commands:
-            help_str += f'{command.names[0]:{max_command_len}}: {command.description}\n'
+            if name is not None:
+                name = name.lower()
 
-        help_str += '```'
+                for command in self.commands:
+                    if name in command.names:
+                        await command.send_help(message)
+                        return
+                else:
+                    await message.channel.send(f'Command "{name}" not found.')
+                    return
+            else:
+                help_str = '```'
+                help_str += 'Available commands:\n'
 
-        self.log(help_str)
-        await message.channel.send(help_str)
+                max_command_len = max([len(c.names[0]) for c in self.commands])
 
-        pass
+                for command in self.commands:
+                    help_str += f'{command.names[0]:{max_command_len}}: {command.description}\n'
+
+                help_str += '```'
+
+                self.log(help_str)
+                await message.channel.send(help_str)
+                return
 
     def load_modules(self, modules):
         for cls in modules:
@@ -151,7 +180,7 @@ class Cubot(discord.Client):
 
                 self.log(f'Loaded module {module.name}')
             except Exception as ex:
-                self.log(f'Error loading module {module}: {ex}')
+                self.log(f'Error loading module {cls}: {ex}')
 
     def add_module(self, module: Module):
         if any(module.name == m.name for m in self.modules):

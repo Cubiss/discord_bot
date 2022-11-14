@@ -1,21 +1,16 @@
 from classes.module import *
 from classes.service import Service
-from classes.users import User
+from modules.users.users import User
 
 
 class MinecraftModule(Module):
     def __init__(self, **kwargs):
         super().__init__("minecraft", **kwargs)
 
-        self.addcom(
-            Command(
-                names=['minecraft'],
-                regexp=r'^__name__\s*(?P<cmd>\S*)$',
-                function=self.minecraft,
-                usage=f'__author__ Usage: !minecraft',
-                description='Displays minecraft server\'s address.'
-            )
-        )
+        # self.addcom(
+        #     Command(names=['minecraft'], regexp=r'^__name__\s*(?P<cmd>\S*)$', function=self.minecraft,
+        #             usage=f'__author__ Usage: !minecraft', description='Displays minecraft server\'s address.')
+        # )
 
     async def minecraft(self, message: discord.Message, user: User, cmd=None, **__) -> bool:
         cmd = (cmd or '').lower()

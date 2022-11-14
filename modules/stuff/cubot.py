@@ -11,23 +11,18 @@ class CubotModule(Module):
         super().__init__("cubot", **kwargs)
 
         self.addcom(
-            Command(
-                names=['classic'],
-                regexp=r'^__name__( .*)?$',
-                function=self.classic_release,
-                usage=f'__author__ Usage: !classic',
-                description='Displays time since release of Classic WoW in czech language.'
-            )
+            Command(names=['classic'], function=self.classic_release,
+                    usage=f'__author__ Usage: !classic',
+                    description='Displays time since release of Classic WoW in czech language.')
         )
 
         self.addcom(
-            Command(
-                names=['iq'],
-                regexp=r'^__name__\s*(<@!?(?P<mention>\d*?)>)?$',
-                function=self.random_iq,
-                usage='__author__ Usage: !iq [@mention]',
-                description='Magically measures user\'s iq.'
-            )
+            Command(names=['iq'], function=self.random_iq,
+                    usage='__author__ Usage: !iq [@mention]', description='Magically measures user\'s iq.',
+                    positional_parameters={
+                        'mention': '__mention__?'
+                    }
+                    )
         )
 
     async def classic_release(self, message: discord.Message, **__) -> bool:
@@ -36,7 +31,7 @@ class CubotModule(Module):
                     datetime.datetime.now() - datetime.datetime(year=2019, month=8, day=27, hour=00, minute=00)
             ).total_seconds())
 
-        await message.channel.send(f'Classic je venku už {time_str}!')
+        await message.channel.send(f'Classic has been out for {time_str}!')
 
         return True
 
