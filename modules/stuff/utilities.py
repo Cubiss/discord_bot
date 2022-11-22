@@ -26,7 +26,7 @@ class UtilitiesModule(Module):
                     description='Displays discord id of mentioned user. (For devs mainly.)')
         )
 
-    async def profile_picture(self, message: discord.Message, mention, **kwargs) -> bool:
+    async def profile_picture(self, message: discord.Message, mention, is_global, **kwargs) -> bool:
         """
         Displays full sized profile picture of either user or a mentioned member.
         :param message:
@@ -35,12 +35,12 @@ class UtilitiesModule(Module):
         """
 
         if mention is not None:
-            user = message.guild.get_member(int(mention))
+            user = message.mentions[0]
         else:
             user = message.author
 
-        use_global = False
-        if kwargs['global'] is not None:
+        use_global = True
+        if is_global is not None:
             use_global = True
 
         embed = discord.Embed(

@@ -1,5 +1,8 @@
 import re
+from collections import OrderedDict
+
 import discord
+from collections.abc import Iterable
 
 from modules.users.users import Users, User
 
@@ -14,15 +17,17 @@ class Command:
     _param_prefabs = {
         '__integer__': r'\d*',
         '__mention__': r'<@(?P<__value__>.*?)>',
-        '__number__': r'\d?\.?\d+%?',
-        '__any__': r'.*?'
+        '__number__': r'(\+|\-)?\d?\.?\d+%?',
+        '__any__': r'".+?"|\S+',
+        '__all__': r'.*?'
     }
 
     def __init__(self, names: list, function: callable, usage=None, description='',
-                 permissions: list = None, timeout=5, flags=None, positional_parameters=None, optional_parameters=None):
+                 permissions: list = None, timeout=5, flags: dict = None,
+                 positional_parameters: dict = None, named_parameters: dict = None):
         """
         Creates a command.
-        :param optional_parameters: Automatically generated string parameters
+        :param named_parameters: Automatically generated string parameters
         :param names: Aliases of the command. First name is
         :param function: coroutine(**kwargs) -> bool:
                         kwargs: arguments parsed from regexp groups + Command.command_parameters
@@ -36,7 +41,7 @@ class Command:
 
         self.flags = flags or {}
         self.positional_parameters = self.replace_prefabs(positional_parameters) or {}
-        self.optional_parameters = self.replace_prefabs(optional_parameters) or {}
+        self.named_parameters = self.replace_prefabs(named_parameters) or {}
 
         self.regex = self.update_regexp()
 
@@ -108,8 +113,8 @@ class Command:
         return await self.function(**params)
 
     async def send_help(self, message: discord.Message):
-        await message.channel.send(self._format_message(message=message,
-                                                        string=','.join(self.names) + '\n' + self.description + '\n' + self.usage))
+        await message.channel.send(self._format_message(
+            message=message, string=','.join(self.names) + '\n' + self.description + '\n' + self.usage))
 
     def _format_message(self, string: str, message: discord.Message):
         if string is None:
@@ -144,30 +149,31 @@ class Command:
 
                 regexp += rf'\s*(?P<{param}>{self.positional_parameters[param]})\s*'
 
-        if self.optional_parameters is not None:
-            optional_parameters = {}
-            for param in self.optional_parameters:
-                # full = self.optional_parameters[param]
-                # spaceless = self.optional_parameters[param].replace(".", r"\S")
+        if self.named_parameters is not None:
+            named_params = {}
+            for param in self.named_parameters:
+                # full = self.named_params[param]
+                # spaceless = self.named_params[param].replace(".", r"\S")
 
                 real_name = param[1:] if param[0] == '_' else param
 
-                optional_parameters[param] = rf'(\s*{real_name}=(?P<{param}>{self.optional_parameters[param]})\s*)'
+                named_params[param] = rf'(\s*{real_name}=(?P<{param}>{self.named_parameters[param]})\s*)'
 
-            regexp += rf'\s*(?P<_optional_params>({"|".join(optional_parameters.values())})*)'
+            regexp += rf'\s*(?P<_optional_params>({"|".join(named_params.values())})*)'
 
         names = "|".join(self.names)
         regexp = regexp.replace("__name__", f'({names})')
+        regexp += "$"
 
-        self.regex = re.compile(regexp)
+        self.regex = re.compile(regexp, flags=re.DOTALL|re.IGNORECASE|re.MULTILINE)
         return self.regex
 
     def replace_prefabs(self, params: dict):
         if params is None:
             return None
 
-        if type(params) is list:
-            params = dict.fromkeys(params, '__any__')
+        if not isinstance(params, OrderedDict):
+            params = OrderedDict(params)
 
         param_names = list(params.keys())
 
@@ -177,8 +183,10 @@ class Command:
                 if prefab_name in param:
                     if '__value__' in prefab:
                         prefab = prefab.replace('__value__', param_name)
-                        params.pop(param_name)
-                        param_name = '_' + param_name
+
+                        wrapper_name = '_' + param_name
+                        change_key(params, param_name, wrapper_name)
+                        param_name = wrapper_name
                     params[param_name] = param.replace(prefab_name, f'({prefab})')
 
         return params
@@ -191,6 +199,12 @@ class Command:
         for p in self.positional_parameters:
             usage += f'<{p}> '
 
-        for opt in self.optional_parameters:
+        for opt in self.named_parameters:
             usage += f'[{opt}]'
         return usage
+
+
+def change_key(d: OrderedDict, old, new):
+    for _ in range(len(d)):
+        k, v = d.popitem(False)
+        d[new if old == k else k] = v

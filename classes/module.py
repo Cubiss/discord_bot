@@ -7,6 +7,8 @@ from classes.logger import Logger
 
 
 class Module:
+    name = '__uninitialized__'
+
     def __init__(self, name: str, client=None, log: Logger = None):
         from classes.cubot import Cubot
         self.name = name
@@ -27,4 +29,4 @@ class Module:
         pass
 
     def __repr__(self):
-        return f"<Module {self.name}>"
+        return f"<Module({self.name})>"

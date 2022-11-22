@@ -31,10 +31,11 @@ class Entity:
         if not self.table_exists():
             self.create_table()
 
-    def create(self, **values):
+    def create(self, _reload=True, **values):
         new_item = self.entity_item_type(db=self.db, entity=self, db_values=values)
-        new_item.save()
-        self[new_item.primary_key] = new_item
+        new_item.save(reload=_reload)
+        if not _reload:
+            self[new_item.primary_key] = new_item
         return new_item
 
     def delete(self, primary_key):
@@ -110,20 +111,23 @@ class Entity:
         c.execute(sql)
         self.db.commit()
 
-    def __getitem__(self, item_id: int):
+    def __getitem__(self, item_id):
         if item_id in self._items:
             return self._items[item_id]
         else:
             return None
 
-    def __setitem__(self, user_id: int, item):
-        if user_id in self._items:
-            raise KeyError("User already exists!")
+    def __setitem__(self, item_id, item):
+        if item_id in self._items and self._items[item_id] != item:
+            raise KeyError(f"Item {item_id} already exists!")
         else:
-            self._items[user_id] = item
+            self._items[item_id] = item
 
     def __iter__(self):
         yield from self._items.values()
+
+    def __contains__(self, item):
+        return item in self._items
 
     def get_primary_key_columns(self):
         primary_keys = ()
@@ -135,7 +139,7 @@ class Entity:
 
 
 class Column:
-    def __init__(self, name, data_type, nullable=True, primary_key=False, auto_increment=False, default=None):
+    def __init__(self, name, data_type, default=None, nullable=True, primary_key=False, auto_increment=False):
         self.name = name
         if data_type not in _db_type_mapping.keys():
             raise Exception(f"Type {data_type} not one of the following: {', '.join(str(t) for t in _db_type_mapping)}")
@@ -148,3 +152,5 @@ class Column:
     def __repr__(self):
         return f"<Column {'[pk]' if self.primary_key else ''}{self.name}>"
 
+    def convert(self, value):
+        return None if value is None else self.type(value)

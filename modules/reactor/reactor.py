@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from c__lib import format_table
 import random
 import datetime
@@ -20,10 +22,11 @@ class ReactorModule(Module):
                         description='Add a reactor.',
                         flags={
                             'is_global': '-global'},
-                        positional_parameters={
-                            'mention': r'__mention__',
-                            'emote': r'__any__'},
-                        optional_parameters={
+                        positional_parameters=OrderedDict([
+                            ('mention', r'__mention__'),
+                            ('emote', r'__any__')
+                            ]),
+                        named_parameters={
                             'chance': r'__number__',
                             'cooldown': r'__integer__'
                         }

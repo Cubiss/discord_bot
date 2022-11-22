@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import cubot
 from classes.module import *
 
@@ -13,10 +15,10 @@ class SendModule(Module):
             Command(names=['send'],
                     function=self.send, usage='__author__ Usage: !roll [#channel] Your message.',
                     description='Sends a message in a channel.', permissions=['happyadmin'],
-                    positional_parameters={
-                        '_channel': r'(\<\#(?P<channel>\d*)\>)?',
-                        'text': r'(.|\n)*'
-                    }
+                    positional_parameters=OrderedDict([
+                        ('_channel', r'(\<\#(?P<channel>\d*)\>)?'),
+                        ('text', r'(.|\n)*')
+                    ])
                     )
         )
 

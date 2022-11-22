@@ -8,6 +8,7 @@ class EntityItem:
             self.loaded = False
             if not hasattr(entity, "is_entity") or not entity.is_entity:
                 raise Exception(f"{entity} is not an entity")
+
             self.entity = entity
             self.new = new
             self.initialize(db_values)
@@ -27,56 +28,73 @@ class EntityItem:
 
             if column.name in pks:
                 storage_name = "_" + column.name
-                setattr(self, storage_name, column.type(value))
+                setattr(self, storage_name, column.convert(value))
 
                 # noinspection PyShadowingNames
-                def getter(self):
-                    return getattr(self, storage_name)
+                def make_getter(storage_name):
+                    # noinspection PyShadowingNames
+                    def getter(self):
+                        return getattr(self, storage_name)
+                    return getter
 
                 # noinspection PyShadowingNames
-                def setter(self, value):
-                    setattr(self, storage_name, column.type(value))
-                    self._update_primary_key()
+                def make_setter(storage_name):
+                    # noinspection PyShadowingNames
+                    def setter(self, value):
+                        if not hasattr(self, storage_name):
+                            return
+                        setattr(self, storage_name, column.convert(value))
+                        self._update_primary_key()
+                    return setter
 
                 # noinspection PyShadowingNames
-                def deleter(self):
-                    delattr(self, storage_name)
+                def make_deleter(storage_name):
+                    # noinspection PyShadowingNames
+                    def deleter(self):
+                        delattr(self, storage_name)
+                    return deleter
 
-                setattr(type(self), column.name, property(getter, setter, deleter, f"{self.entity.name}.{column.name} property."))
+                setattr(type(self), column.name,
+                        property(make_getter(storage_name), make_setter(storage_name), make_deleter(storage_name),
+                                 f"{self.entity.name}.{column.name} property."))
             else:
-                setattr(self, column.name, column.type(value))
+                setattr(self, column.name, column.convert(value))
 
         self._update_primary_key()
         self.loaded = True
 
-    def load(self):
+    def load(self, rowid=None):
         selector = ""
+        selector_params = []
 
-        for c in self.get_primary_key_columns():
-            selector += f' {c} = ?'
+        if rowid is not None:
+            selector = "rowid = ?"
+            selector_params = [rowid]
+        else:
+            selector = " AND ".join(f" {c} = ? " for c in self.get_primary_key_columns())
+            selector_params = self.primary_key
 
         cursor: sqlite3.Cursor
         cursor = self.db.cursor()
         cursor.row_factory = sqlite3.Row
 
-        cursor.execute(f"SELECT count() as cnt FROM {self.entity.name} WHERE {selector}", self.primary_key)
+        cursor.execute(f"SELECT count() as cnt FROM {self.entity.name} WHERE {selector}", selector_params)
         row = cursor.fetchone()
 
         if int(row['cnt']) != 1:
-            raise Exception(f"Loading item from {self.entity.name} based on pk {self.primary_key}:"
+            raise Exception(f"Loading item from {self.entity.name} based on pk {selector_params}:"
                             f" Found {int(row['cnt'])} items, expected 1.")
 
         sql = f"SELECT {', '.join(c.name for c in self.entity.columns)} FROM {self.entity.name} WHERE {selector}"
-        cursor.execute(sql, self.primary_key)
-
-
+        cursor.execute(sql, selector_params)
         row = cursor.fetchone()
+
         values = {}
         key = ()
         for column in self.entity.columns:
             values[column.name] = row[column.name]
             if column.primary_key:
-                key += values[column.name]
+                key += (values[column.name], )
 
         self.initialize(values)
 
@@ -106,10 +124,13 @@ class EntityItem:
         cursor: sqlite3.Cursor
         cursor = self.db.cursor()
         cursor.execute(sql, insert_values + update_values)
+
+        rowid = cursor.lastrowid
+
         self.db.commit()
 
         if reload:
-            self.load()
+            self.load(rowid=rowid or None)
 
     def delete(self):
         sql = f"DELETE FROM {self.entity.name} WHERE "
@@ -128,7 +149,7 @@ class EntityItem:
             pks = ()
 
             for pk in pkc:
-                pks += (pk, )
+                pks += (getattr(self, pk), )
 
         self._primary_key = pks
 

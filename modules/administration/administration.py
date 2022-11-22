@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from classes.module import *
 from classes.cubot import Cubot
 
@@ -29,23 +31,23 @@ class AdministrationModule(Module):
                     Command(
                         names=['add'],
                         function=self.add_permission,
-                        positional_parameters={
-                            'mention': '__mention__',
-                            'permission': '__any__'
-                        }
+                        positional_parameters=OrderedDict([
+                            ('mention', '__mention__'),
+                            ('permission', '__any__')
+                            ])
                     ),
                     Command(
                         names=['remove'],
                         function=self.remove_permission,
-                        positional_parameters={
-                            'mention': '__mention__',
-                            'permission': '__any__'
-                        }
+                        positional_parameters=OrderedDict([
+                            ('mention', '__mention__'),
+                            ('permission', '__any__')
+                        ])
                     ),
                     Command(
                         names=['list'],
                         function=self.list_permissions,
-                        optional_parameters={
+                        named_parameters={
                             'mention': '__mention__',
                             'permission': '__any__'
                         }
