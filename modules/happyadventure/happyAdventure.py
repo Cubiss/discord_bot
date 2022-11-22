@@ -193,9 +193,9 @@ class HappyAdventureModule(Module):
             return await message.channel.send(
                 f'Character "{char.NAME}" created. It got automatically selected. (id={char.CHARACTER_ID})')
 
-    async def character_select(self, query, id, name, message: discord.Message, **__):
+    async def character_select(self, mention, query, id, name, message: discord.Message, **__):
         try:
-            user_id = message.author.id
+            user_id = int(mention) if mention else message.author.id
             id = int(id) if id else None
 
             found = self.characters.search(query=query, character_id=id, name=name, user_id=user_id)
