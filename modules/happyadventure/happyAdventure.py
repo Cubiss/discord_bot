@@ -179,6 +179,9 @@ class HappyAdventureModule(Module):
                 f'Character "{char.NAME}" created. (id={char.CHARACTER_ID})\n'
                 f'You may want to select it: !character select id={char.CHARACTER_ID}')
         else:
+            self.characters.select(
+                character_id=char.CHARACTER_ID, user_id=message.author.id, server_id=message.guild.id)
+
             return await message.channel.send(
                 f'Character "{char.NAME}" created. It got automatically selected. (id={char.CHARACTER_ID})')
 
