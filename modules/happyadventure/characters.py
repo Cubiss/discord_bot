@@ -17,14 +17,20 @@ class Character(EntityItem):
 
     def info_page(self) -> str:
         return \
-            f"""
+            f"""```
 **{self.NAME}**
 __________________________
 {self.DESCRIPTION}
 __________________________
 HP:    {self.HP}/{self.MAX_HP}
 ARMOR: {self.ARMOR}
+```
 """
+
+    def is_active(self):
+        c = self.db.cursor()
+        c.execute('select count() from SelectedCharacters where CHARACTER_ID = ?', [self.CHARACTER_ID])
+        return int(c.fetchone()[0]) > 0
 
 
 class Characters(Entity):
@@ -34,8 +40,8 @@ class Characters(Entity):
                          [Column('CHARACTER_ID', int, nullable=False, primary_key=True, auto_increment=True),
                           Column('USER_ID', int, nullable=False),
                           Column('SERVER_ID', int, nullable=False),
-                          Column('NAME', str),
-                          Column('DESCRIPTION', str),
+                          Column('NAME', str, ''),
+                          Column('DESCRIPTION', str, ''),
                           Column('MAX_HP', float, 0),
                           Column('ARMOR', float, 0),
                           Column('HP', float, 0)

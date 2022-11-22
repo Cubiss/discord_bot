@@ -45,6 +45,16 @@ class CommandTree(Command):
     def build_usage(self):
         return f'Allowed commands: {self.names[0]} ({"|".join(self.children)})'
 
+    async def send_help(self, message: discord.Message, names=None):
+        if names is not None and len(names) > 0:
+            name = names.pop(0)
+
+            for c in self.children.values():
+                if name in c.names:
+                    return await c.send_help(message, names)
+
+        return await super().send_help(message)
+
     def __repr__(self):
         if self.names is None or len(self.names) == 0:
             return f'<CommandTree() - uninitialized'

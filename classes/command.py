@@ -112,7 +112,10 @@ class Command:
         # finally run the command code
         return await self.function(**params)
 
-    async def send_help(self, message: discord.Message):
+    async def send_help(self, message: discord.Message, names=None):
+        if names is not None and len(names) > 0:
+            pass
+
         await message.channel.send(self._format_message(
             message=message, string=','.join(self.names) + '\n' + self.description + '\n' + self.usage))
 

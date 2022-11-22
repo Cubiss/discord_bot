@@ -143,18 +143,9 @@ class Cubot(discord.Client):
 
         if (m := regex.match(message.content)) is not None:
             m: re.Match
-            name = m.group('name')
-
-            if name is not None:
-                name = name.lower()
-
-                for command in self.commands:
-                    if name in command.names:
-                        await command.send_help(message)
-                        return
-                else:
-                    await message.channel.send(f'Command "{name}" not found.')
-                    return
+            names = m.group('name')
+            if names is not None:
+                names = names.split()
             else:
                 help_str = '```'
                 help_str += 'Available commands:\n'
@@ -167,8 +158,18 @@ class Cubot(discord.Client):
                 help_str += '```'
 
                 self.log(help_str)
-                await message.channel.send(help_str)
-                return
+                return await message.channel.send(help_str)
+
+            while len(names) > 0:
+                name = names.pop(0).lower()
+
+                for command in self.commands:
+                    if name in command.names:
+                        return await command.send_help(message, names=names)
+
+                else:
+                    return await message.channel.send(f'Command "{name}" not found.')
+
 
     def load_modules(self, modules):
         for cls in modules:

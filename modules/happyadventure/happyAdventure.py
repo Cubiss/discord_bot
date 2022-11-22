@@ -1,5 +1,8 @@
 import asyncio
 import random
+
+import discord
+
 from classes.module import *
 from .characters import Characters, Character
 from c__lib import format_table
@@ -50,6 +53,7 @@ class HappyAdventureModule(Module):
                             'hp': '__number__',
                             'max_hp': '__number__',
                             'armor': '__number__',
+                            'owner': '__mention__'
                         }
                     ),
                     Command(
@@ -57,6 +61,7 @@ class HappyAdventureModule(Module):
                         function=self.character_select,
                         description='Select a chalacter.',
                         positional_parameters={
+                            'mention': '__mention__?',
                             'query': '__any__??'
                         },
                         named_parameters={
@@ -69,7 +74,7 @@ class HappyAdventureModule(Module):
                         function=self.character_list,
                         description='List your characters',
                         flags={
-                            'all': 'all'
+                            'all': '--all'
                         },
                         positional_parameters={
                             'mention': '__mention__?'
@@ -80,7 +85,8 @@ class HappyAdventureModule(Module):
                         function=self.character_info,
                         description='Display character info.',
                         positional_parameters={
-                            'mention': '__mention__?'
+                            'mention': '__mention__?',
+                            'character': '__any__?'
                         }
                     ),
                     Command(
@@ -88,13 +94,15 @@ class HappyAdventureModule(Module):
                         function=self.character_edit,
                         description='Edit character',
                         positional_parameters={
-                            'mention': '__mention__?'
+                            'mention': '__mention__?',
+                            'character': '__any__??'
                         },
                         named_parameters={
                             'max_hp': '__number__',
                             'hp': '__number__',
                             'armor': '__number__',
                             'description': '__any__',
+                            'owner': '__mention__',
                         }
                     )
                 ]
@@ -156,14 +164,14 @@ class HappyAdventureModule(Module):
 
         return True
 
-    async def character_create(self, message: discord.Message, name, description, hp, armor, max_hp, **__):
+    async def character_create(self, message: discord.Message, name, description, hp, armor, max_hp, owner, **__):
         char: Character
 
         hp = int(hp) if hp else 0
         armor = int(armor) if armor else 0
 
         char = self.characters.create(
-            USER_ID=message.author.id,
+            USER_ID=int(owner) if owner else message.author.id,
             SERVER_ID=message.guild.id,
             NAME=name,
             DESCRIPTION=description,
@@ -208,47 +216,82 @@ class HappyAdventureModule(Module):
                 header = ['id', 'name', 'description']
                 t = [[c.CHARACTER_ID, c.NAME, c.DESCRIPTION] for c in found]
                 return await message.channel.send(
-                    f'Please choose one of following by id:\n{format_table(header=header, table=t)}')
+                    f'Please choose one of following by id:\n```{format_table(header=header, table=t)}```')
 
         except Exception as ex:
             return await message.channel.send(f'character_select error: {ex}')
 
-    async def character_list(self, message: discord.Message, mention, all, **__):
+    async def character_list(self, message: discord.Message, client: discord.Client, mention, all, **__):
 
-        server_id = None if all else message.guild.id
-
-        user_id = message.author.id if mention is None else message.mentions[0].id
+        if mention is not None:
+            user_id = int(mention)
+            server_id = None if all else message.guild.id
+        else:
+            user_id = None if all else message.author.id
+            server_id = message.guild.id
 
         found = self.characters.search(user_id=user_id, server_id=server_id)
 
         if len(found) == 0:
             return await message.channel.send(f'No characters.')
 
-        header = ['id', 'name', 'description']
-        t = [[c.CHARACTER_ID, c.NAME, c.DESCRIPTION] for c in found]
+        header = ['owner', 'S', 'id', 'name', 'description']
+
+        t = [[client.get_user(c.USER_ID).display_name,
+              'x' if c.is_active() else '',
+              c.CHARACTER_ID,
+              c.NAME,
+              c.DESCRIPTION] for c in found]
 
         return await message.channel.send(f'```{format_table(header=header, table=t)}```')
 
-    async def character_info(self, message: discord.Message, mention, **__):
+    async def character_info(self, message: discord.Message, mention, character, **__):
         user = message.mentions[0] if mention else message.author
 
-        char = self.characters.get_selected(user.id, message.guild.id)
+        if character is not None and character != '':
 
+            chars = self.characters.search(character)
+            if len(chars) == 0:
+                return await message.channel.send(f'No character found matching "{character}"')
+            elif len(chars) > 1:
+                header = ['id', 'name', 'description']
+                t = [[c.CHARACTER_ID, c.NAME, c.DESCRIPTION] for c in chars]
+                return await message.channel.send(
+                    f'Please choose one of following by id:\n```{format_table(header=header, table=t)}```')
+
+            return await message.channel.send(chars[0].info_page())
+
+        char = self.characters.get_selected(user.id, message.guild.id)
         if char is None:
             return await message.channel.send(f'No character selected.')
         else:
-            return await message.channel.send('```' + char.info_page() + '```')
+            return await message.channel.send(char.info_page())
 
-    async def character_edit(self, message: discord.Message, mention, max_hp, hp, armor, description, **__):
+    async def character_edit(self, message: discord.Message, users, character, mention, max_hp, hp, armor, description, owner, **__):
         user = message.author if mention is None else message.mentions[0]
-        char = self.characters.get_selected(user.id, message.guild.id)
-        if char is None:
-            return await message.channel.send(f'No character selected.')
+        char = None
+        if character is not None and character != '':
+            chars = self.characters.search(character)
+
+            if len(chars) == 0:
+                return await message.channel.send(f'No character found matching "{character}"')
+            elif len(chars) > 1:
+                header = ['id', 'name', 'description']
+                t = [[c.CHARACTER_ID, c.NAME, c.DESCRIPTION] for c in chars]
+                return await message.channel.send(
+                    f'Please choose one of following by id:\n```{format_table(header=header, table=t)}```')
+
+            char = chars[0]
+        else:
+            char = self.characters.get_selected(user.id, message.guild.id)
+            if char is None:
+                return await message.channel.send(f'Player {users.get_or_create(user)} character selected.')
 
         char.MAX_HP = max_hp or char.MAX_HP
         char.HP = hp or char.HP
         char.ARMOR = armor or char.ARMOR
         char.DESCRIPTION = description or char.DESCRIPTION
+        char.USER_ID = int(owner) if owner else char.USER_ID
         char.save()
 
         return await message.channel.send(char.info_page())
@@ -276,8 +319,16 @@ class HappyAdventureModule(Module):
         if new_hp == old_hp:
             return await message.channel.send(f"{char.NAME}'s health didn't change. They have {new_hp} now.")
         elif new_hp > old_hp:
-            return await message.channel.send(f"{char.NAME}'s gained {new_hp - old_hp} health. They have {new_hp} now.")
+            return await message.channel.send(f"{char.NAME} gained {new_hp - old_hp} health. They have {new_hp} now.")
         elif new_hp <= 0:
-            return await message.channel.send(f"{char.NAME}'s lost {new_hp - old_hp} health. They **DIED**.")
+            return await message.channel.send(f"{char.NAME} lost {new_hp - old_hp} health. They **DIED**.")
         else:
-            return await message.channel.send(f"{char.NAME}'s lost {old_hp - new_hp} health. They have {new_hp} now.")
+            return await message.channel.send(f"{char.NAME} lost {old_hp - new_hp} health. They have {new_hp} now.")
+
+    async def character_setowner(self, message: discord.Message, mention, character, **__):
+        src = message.mentions[0]
+        tgt = message.mentions[1]
+
+        char = self.characters.search(character)
+
+
