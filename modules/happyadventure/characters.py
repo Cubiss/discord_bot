@@ -83,7 +83,7 @@ class Characters(Entity):
 
         return found
 
-    def select(self, character_id: int, user_id: int, server_id: int) -> Character:
+    def select(self, character_id: int, user_id: int, server_id: int):
         user_characters = [c.CHARACTER_ID for c in self if c.USER_ID == user_id]
 
         if character_id not in user_characters:
@@ -92,7 +92,7 @@ class Characters(Entity):
         self.selected_characters.select(character_id=character_id, user_id=user_id, server_id=server_id)
         return self[character_id]
 
-    def get_selected(self, user_id: int, server_id: int) -> Character | None:
+    def get_selected(self, user_id: int, server_id: int):
         if (user_id, server_id) in self.selected_characters:
             return self[self.selected_characters[(user_id, server_id)].CHARACTER_ID]
         else:
