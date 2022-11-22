@@ -34,7 +34,8 @@ def load_modules():
                     __import__(full_module_path)
                     log(f'Imported module: {module_path}')
                 except Exception as ex:
-                    log(f'Failed to import module {full_module_path}: {ex}')
+                    log(f'Failed to import module {full_module_path}: {ex}\n{traceback.format_tb(ex.__traceback__)}')
+
 
     return Module.__subclasses__()
 
