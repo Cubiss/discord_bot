@@ -20,6 +20,12 @@ class Entity:
         self.name = name
         self.columns = columns
 
+        self.column_dict = {}
+
+        for c in columns:
+            self.column_dict[c.name] = c
+
+
         if entity_item_type is not None and not issubclass(entity_item_type, EntityItem):
             raise Exception(f"{entity_item_type} is not subclass of {EntityItem}")
 

@@ -32,6 +32,7 @@ class HappyAdventureModule(Module):
                 function=self.character_edit_hp,
                 description='Add, remove or set health.',
                 positional_parameters=OrderedDict([
+
                     ('mention', '__mention__?'),
                     ('query', r'__number__')
                     ])

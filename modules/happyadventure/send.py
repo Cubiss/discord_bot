@@ -14,7 +14,7 @@ class SendModule(Module):
         self.addcom(
             Command(names=['send'],
                     function=self.send, usage='__author__ Usage: !roll [#channel] Your message.',
-                    description='Sends a message in a channel.', permissions=['happyadmin'],
+                    description='Sends a message in a channel.',
                     positional_parameters=OrderedDict([
                         ('_channel', r'(\<\#(?P<channel>\d*)\>)?'),
                         ('text', r'(.|\n)*')
@@ -25,7 +25,7 @@ class SendModule(Module):
         self.addcom(
             Command(names=['setsend', 'sendset'],
                     function=self.setsend, usage='__author__ Usage: !setsay #channel',
-                    description='Sets a channel for !say command.', permissions=['happyadmin'],
+                    description='Sets a channel for !say command.',
                     positional_parameters={
                         '_channel': r'(\<\#(?P<channel>\d*)\>)',
                     })

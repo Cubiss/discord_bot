@@ -118,8 +118,8 @@ class EntityItem:
         sql += ") DO UPDATE SET "
         sql += ", ".join(f"{name} = ?" for name in update_column_names)
 
-        insert_values = [getattr(self, name) for name in insert_column_names]
-        update_values = [getattr(self, name) for name in update_column_names]
+        insert_values = [self.entity.column_dict[name].convert(getattr(self, name)) for name in insert_column_names]
+        update_values = [self.entity.column_dict[name].convert(getattr(self, name)) for name in update_column_names]
 
         cursor: sqlite3.Cursor
         cursor = self.db.cursor()

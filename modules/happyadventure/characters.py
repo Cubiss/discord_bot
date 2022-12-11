@@ -32,6 +32,9 @@ ARMOR: {self.ARMOR}
         c.execute('select count() from SelectedCharacters where CHARACTER_ID = ?', [self.CHARACTER_ID])
         return int(c.fetchone()[0]) > 0
 
+    def __repr__(self):
+        return f'Character<{self.NAME}>'
+
 
 class Characters(Entity):
     def __init__(self, db: sqlite3.Connection):
