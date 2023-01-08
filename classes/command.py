@@ -115,8 +115,11 @@ class Command:
         params.update(match.groupdict())
 
         # finally run the command code
-        return await self.function(**params)
-
+        try:
+            return await self.function(**params)
+        except Exception as ex:
+            await message.channel.send(f"ERROR: {ex}")
+            return False
     async def send_help(self, message: discord.Message, names=None):
         if names is not None and len(names) > 0:
             pass

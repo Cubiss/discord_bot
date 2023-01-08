@@ -119,10 +119,10 @@ class SendModule(Module):
 
         sc = self.sendchannels.create(SOURCE_CHANNEL=source, TARGET_CHANNEL=target)
 
-        await message.channel.send(f"SendChannel {sc.SENDCHANNEL_ID} removed.")
+        await message.channel.send(f"SendChannel {sc.SENDCHANNEL_ID} added.")
 
-    async def removesendchannel(self, message, scid):
-        self.sendchannels.delete(scid)
+    async def removesendchannel(self, message, scid, **__):
+        self.sendchannels.delete(int(scid))
         await message.channel.send(f"SendChannel {scid} removed.")
 
     async def listsendchannels(self, message, **__):
