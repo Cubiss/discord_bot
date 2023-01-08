@@ -56,7 +56,7 @@ class EntityItem:
 
                 setattr(type(self), column.name,
                         property(make_getter(storage_name), make_setter(storage_name), make_deleter(storage_name),
-                                 f"{self.entity.name}.{column.name} property."))
+                                 f"{self.__class__.__name__}.{column.name} property."))
             else:
                 setattr(self, column.name, column.convert(value))
 
@@ -156,3 +156,6 @@ class EntityItem:
     @property
     def primary_key(self):
         return self._primary_key
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self.primary_key})'

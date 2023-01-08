@@ -83,6 +83,8 @@ class Entity:
                     key = key[0]
 
                 self[key] = item
+
+            self.loaded = True
         except Exception as ex:
             raise Exception(f"Error loading entity: {ex}")
 
@@ -125,7 +127,7 @@ class Entity:
 
     def __setitem__(self, item_id, item):
         if item_id in self._items and self._items[item_id] != item:
-            raise KeyError(f"Item {item_id} already exists!")
+            raise KeyError(f"{self.entity_item_type.__name__} item '{item_id}' already exists!")
         else:
             self._items[item_id] = item
 
@@ -134,6 +136,9 @@ class Entity:
 
     def __contains__(self, item):
         return item in self._items
+
+    def values(self):
+        return self._items.values();
 
     def get_primary_key_columns(self):
         primary_keys = ()

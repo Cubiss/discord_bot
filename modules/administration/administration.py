@@ -11,7 +11,10 @@ class AdministrationModule(Module):
         super().__init__("administration", **kwargs)
         self.addcom(
             Command(names=['test', 't'], function=self.test,
-                    usage='__author__ Usage: !profilepicture [@mention]', description='Test command.',
+                    usage='__author__ Usage: !test __any__', description='Test command.',
+                    positional_parameters=OrderedDict([
+                        ("msgcontent", r'__any__')
+                    ]),
                     permissions=['admin'])
         )
 
@@ -57,7 +60,7 @@ class AdministrationModule(Module):
         )
 
     async def test(self, message: discord.Message, **__):
-        await message.channel.send(__)
+        print(message.content)
         pass
 
     async def change_username(self, message: discord.Message, client: Cubot, **__) -> bool:

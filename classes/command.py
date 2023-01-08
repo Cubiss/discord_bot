@@ -17,6 +17,8 @@ class Command:
     _param_prefabs = {
         '__integer__': r'\d*',
         '__mention__': r'<@(?P<__value__>.*?)>',
+        '__role__': r'<@&(?P<__value__>.*?)>',
+        '__channel__': r'<#(?P<__value__>.*?)>',
         '__number__': r'(\+|\-)?\d?\.?\d+%?',
         '__any__': r'".+?"|\S+',
         '__all__': r'.*?'
@@ -35,7 +37,7 @@ class Command:
         :param description: String saying what command should do.
         """
         self.db = None
-        self.names = names
+        self.names = [n.lower() for n in names]
 
         self.function = function
 
@@ -62,6 +64,9 @@ class Command:
         self.timeout = timeout
 
     def is_match(self, text: str):
+        if 'setsendchannel' in self.names:
+            pass
+
         for name in self.names:
             if text.lower().startswith(name):
                 if len(text.lower()) > len(name) and not text.lower()[len(name)].isspace():
