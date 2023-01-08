@@ -128,10 +128,11 @@ class SendModule(Module):
     async def listsendchannels(self, message, **__):
         table = []
         for sc in self.sendchannels.values():
-            table.append([sc.SENDCHANNEL_ID, sc.SOURCE_CHANNEL, sc.TARGET_CHANNEL])
+            table.append([sc.SENDCHANNEL_ID, f'<#{sc.SOURCE_CHANNEL}>', f'<#{sc.TARGET_CHANNEL}>'])
 
         if len(table) == 0:
             await message.channel.send("No SendChannels.")
+            return True
 
         header = ["SENDCHANNEL_ID", "SOURCE_CHANNEL", "TARGET_CHANNEL"]
 
