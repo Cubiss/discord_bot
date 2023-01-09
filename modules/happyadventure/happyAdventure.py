@@ -208,8 +208,8 @@ class HappyAdventureModule(Module):
 
     async def add(self, message, query, **_):
 
-        char = message.content[1:3].upper()
-        stat = message.content[3:5].lower()
+        char = message.content[2:4].upper()
+        stat = message.content[4:6].lower()
         query = int(query)
 
         char = char.upper()
@@ -290,3 +290,4 @@ class HappyAdventureModule(Module):
         )
 
         return True
+oh
