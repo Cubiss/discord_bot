@@ -200,7 +200,7 @@ class HappyAdventureModule(Module):
         #         c.ARMOR = c.MAX_ARMOR
         #     await message.channel.send(f"{char}'s ARMOR changed to {c.ARMOR}/{c.MAX_ARMOR}")
         elif stat == 'a ':
-            c.ARMOR = min(query, c.MAX_ARMOR)
+            c.ARMOR = query
             await message.channel.send(f"{char}'s ARMOR changed to {c.ARMOR}")
         else:
             await message.channel.send(f"Unknown stat: {stat}")
