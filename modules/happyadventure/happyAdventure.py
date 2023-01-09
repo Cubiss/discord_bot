@@ -268,7 +268,7 @@ class HappyAdventureModule(Module):
         dmg = max(query - c.ARMOR, 0)
         c.HP = c.HP - dmg
         c.save()
-        await message.channel.send(f"{self.chars[c.CHARACTER_ID]} took {dmg}! They now have {c.HP}/{c.MAX_HP} health.")
+        await message.channel.send(f"{self.chars[c.CHARACTER_ID]} took {dmg} damage! They now have {c.HP}/{c.MAX_HP} health.")
 
 
 
