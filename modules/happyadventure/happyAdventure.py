@@ -51,7 +51,12 @@ class HappyAdventureModule(Module):
                     )
         )
 
-        self.chars = ['DW', 'EL', 'HE', 'GN', 'HU']
+        self.chars = {
+            'DW': 'Dwarf',
+            'EL': 'Elf',
+            'HE': 'Half-elf',
+            'HU': 'Human'
+        }
 
         for char in self.chars:
             self.addcom(Command([f'a{char}ch', f'add{char}currenthp', f'add{char}currenthealth'],
@@ -190,10 +195,10 @@ class HappyAdventureModule(Module):
             c.MAX_HP = query
             if c.HP == 0:
                 c.HP = c.MAX_HP
-            await message.channel.send(f"{char}'s HP changed to {c.HP}/{c.MAX_HP}")
+            await message.channel.send(f"{self.chars[c.CHARACTER_ID]}'s HP changed to {c.HP}/{c.MAX_HP}")
         elif stat == "ch":
             c.HP = min(query, c.MAX_HP)
-            await message.channel.send(f"{char}'s HP changed to {c.HP}/{c.MAX_HP}")
+            await message.channel.send(f"{self.chars[c.CHARACTER_ID]}'s HP changed to {c.HP}/{c.MAX_HP}")
         # elif stat == 'ma':
         #     c.MAX_ARMOR = query
         #     if c.ARMOR == 0:
@@ -201,7 +206,7 @@ class HappyAdventureModule(Module):
         #     await message.channel.send(f"{char}'s ARMOR changed to {c.ARMOR}/{c.MAX_ARMOR}")
         elif stat == 'a ':
             c.ARMOR = query
-            await message.channel.send(f"{char}'s ARMOR changed to {c.ARMOR}")
+            await message.channel.send(f"{self.chars[c.CHARACTER_ID]}'s ARMOR changed to {c.ARMOR}")
         else:
             await message.channel.send(f"Unknown stat: {stat}")
         c.save()
@@ -223,21 +228,37 @@ class HappyAdventureModule(Module):
         c: Character
         if stat == "mh":
             c.MAX_HP = c.MAX_HP + query
-            await message.channel.send(f"{char}'s HP changed to {c.HP}/{c.MAX_HP}")
+            await message.channel.send(f"{self.chars[c.CHARACTER_ID]}'s HP changed to {c.HP}/{c.MAX_HP}")
         elif stat == "ch":
             c.HP = min(c.HP + query, c.MAX_HP)
-            await message.channel.send(f"{char}'s HP changed to {c.HP}/{c.MAX_HP}")
+            await message.channel.send(f"{self.chars[c.CHARACTER_ID]}'s HP changed to {c.HP}/{c.MAX_HP}")
         # elif stat == 'ma':
         #     c.MAX_ARMOR = c.MAX_ARMOR + query
         #     await message.channel.send(f"{char}'s ARMOR changed to {c.ARMOR}/{c.MAX_ARMOR}")
         elif stat == 'a ':
             c.ARMOR = c.ARMOR + query
-            await message.channel.send(f"{char}'s ARMOR changed to {c.ARMOR}")
+            await message.channel.send(f"{self.chars[c.CHARACTER_ID]}'s ARMOR changed to {c.ARMOR}")
         else:
             await message.channel.send(f"Unknown stat: {stat}")
         c.save()
 
         return True
+
+    async def damage(self, message: discord.Message, query, **_):
+        query = int(query)
+        char = message.content[2:4].upper()
+        if char not in self.chars:
+            await message.channel.send(f"Character {char} not found.")
+            return False
+
+        c: Character
+        c = self.characters[char]
+        dmg = max(query - c.ARMOR, 0)
+        c.HP = c.HP - dmg
+        c.save()
+        await message.channel.send(f"{self.chars[c.CHARACTER_ID]} took {dmg}! They now have {c.HP}/{c.MAX_HP} health.")
+
+
 
     async def setrole(self, message, char, role, **_):
         char = char.upper()
@@ -247,7 +268,7 @@ class HappyAdventureModule(Module):
         c = self.characters[char]
         c.ROLE = role
         c.save()
-        await message.channel.send(f"Character {char} is now represented by <@&{role}>.")
+        await message.channel.send(f"Character {self.chars[c.CHARACTER_ID]} is now represented by <@&{role}>.")
 
         return True
 
@@ -271,7 +292,7 @@ class HappyAdventureModule(Module):
                 if r.id == c.ROLE:
                     t = c__lib.format_table(
                             header=["CHAR", "HP", "ARMOR"],
-                            table=[[c.CHARACTER_ID, f"{c.HP}/{c.MAX_HP}", f"{c.ARMOR}"]]
+                            table=[[self.chars[c.CHARACTER_ID], f"{c.HP}/{c.MAX_HP}", f"{c.ARMOR}"]]
                         )
 
                     await message.channel.send(
@@ -281,12 +302,13 @@ class HappyAdventureModule(Module):
                     )
                     return True
 
-            table.append([c.CHARACTER_ID, f"{c.HP}/{c.MAX_HP}", f"{c.ARMOR}"])
+            table.append([self.chars[c.CHARACTER_ID], f"{c.HP}/{c.MAX_HP}", f"{c.ARMOR}"])
 
-        t =  c__lib.format_table(
+        t = c__lib.format_table(
                 header=["CHAR", "HP", "ARMOR"],
                 table=table
             )
+
         await message.channel.send(
             "```"
             rf"{t}"
