@@ -188,12 +188,16 @@ class HappyAdventureModule(Module):
         c: Character
         if stat == "mh":
             c.MAX_HP = query
+            if c.HP == 0:
+                c.HP = c.MAX_HP
             await message.channel.send(f"{char}'s HP changed to {c.HP}/{c.MAX_HP}")
         elif stat == "ch":
             c.HP = min(query, c.MAX_HP)
             await message.channel.send(f"{char}'s HP changed to {c.HP}/{c.MAX_HP}")
         elif stat == 'ma':
             c.MAX_ARMOR = query
+            if c.ARMOR == 0:
+                c.ARMOR = c.MAX_ARMOR
             await message.channel.send(f"{char}'s ARMOR changed to {c.ARMOR}/{c.MAX_ARMOR}")
         elif stat == 'ca':
             c.ARMOR = min(query, c.MAX_ARMOR)
