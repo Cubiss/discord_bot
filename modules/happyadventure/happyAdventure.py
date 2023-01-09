@@ -70,7 +70,7 @@ class HappyAdventureModule(Module):
                                     ])
                                 ))
 
-            self.addcom(Command([f'a{char}ca', f'add{char}currentarmor'],
+            self.addcom(Command([f'a{char}a', f'add{char}currentarmor'],
                                 function=self.add,
                                 description=f'Add current {char} hp',
                                 positional_parameters=OrderedDict([
@@ -78,13 +78,13 @@ class HappyAdventureModule(Module):
                                     ])
                                 ))
 
-            self.addcom(Command([f'a{char}ma', f'add{char}maxarmor'],
-                                function=self.add,
-                                description=f'Add current {char} hp',
-                                positional_parameters=OrderedDict([
-                                        ('query', '__number__')
-                                    ])
-                                ))
+            # self.addcom(Command([f'a{char}ma', f'add{char}maxarmor'],
+            #                     function=self.add,
+            #                     description=f'Add current {char} hp',
+            #                     positional_parameters=OrderedDict([
+            #                             ('query', '__number__')
+            #                         ])
+            #                     ))
 
             self.addcom(Command([f's{char}ch', f'set{char}currenthp', f'set{char}currenthealth'],
                                 function=self.set,
@@ -102,7 +102,7 @@ class HappyAdventureModule(Module):
                                     ])
                                 ))
 
-            self.addcom(Command([f's{char}ca', f'set{char}currentarmor'],
+            self.addcom(Command([f's{char}a', f'set{char}currentarmor'],
                                 function=self.set,
                                 description=f'Set current {char} hp',
                                 positional_parameters=OrderedDict([
@@ -110,13 +110,13 @@ class HappyAdventureModule(Module):
                                     ])
                                 ))
 
-            self.addcom(Command([f's{char}ma', f'set{char}maxarmor'],
-                                function=self.set,
-                                description=f'Set current {char} hp',
-                                positional_parameters=OrderedDict([
-                                        ('query', '__number__')
-                                    ])
-                                ))
+            # self.addcom(Command([f's{char}ma', f'set{char}maxarmor'],
+            #                     function=self.set,
+            #                     description=f'Set current {char} hp',
+            #                     positional_parameters=OrderedDict([
+            #                             ('query', '__number__')
+            #                         ])
+            #                     ))
 
         self.characters = Characters(self.db)
         self.characters.load()
@@ -194,14 +194,16 @@ class HappyAdventureModule(Module):
         elif stat == "ch":
             c.HP = min(query, c.MAX_HP)
             await message.channel.send(f"{char}'s HP changed to {c.HP}/{c.MAX_HP}")
-        elif stat == 'ma':
-            c.MAX_ARMOR = query
-            if c.ARMOR == 0:
-                c.ARMOR = c.MAX_ARMOR
-            await message.channel.send(f"{char}'s ARMOR changed to {c.ARMOR}/{c.MAX_ARMOR}")
-        elif stat == 'ca':
+        # elif stat == 'ma':
+        #     c.MAX_ARMOR = query
+        #     if c.ARMOR == 0:
+        #         c.ARMOR = c.MAX_ARMOR
+        #     await message.channel.send(f"{char}'s ARMOR changed to {c.ARMOR}/{c.MAX_ARMOR}")
+        elif stat == 'a ':
             c.ARMOR = min(query, c.MAX_ARMOR)
             await message.channel.send(f"{char}'s ARMOR changed to {c.HP}/{c.MAX_HP}")
+        else:
+            await message.channel.send(f"Unknown stat: {stat}")
         c.save()
 
         return True
@@ -225,12 +227,14 @@ class HappyAdventureModule(Module):
         elif stat == "ch":
             c.HP = min(c.HP + query, c.MAX_HP)
             await message.channel.send(f"{char}'s HP changed to {c.HP}/{c.MAX_HP}")
-        elif stat == 'ma':
-            c.MAX_ARMOR = c.MAX_ARMOR + query
-            await message.channel.send(f"{char}'s ARMOR changed to {c.ARMOR}/{c.MAX_ARMOR}")
-        elif stat == 'ca':
-            c.ARMOR = min(c.ARMOR + query, c.MAX_ARMOR)
-            await message.channel.send(f"{char}'s ARMOR changed to {c.HP}/{c.MAX_HP}")
+        # elif stat == 'ma':
+        #     c.MAX_ARMOR = c.MAX_ARMOR + query
+        #     await message.channel.send(f"{char}'s ARMOR changed to {c.ARMOR}/{c.MAX_ARMOR}")
+        elif stat == 'a ':
+            c.ARMOR = c.ARMOR + query
+            await message.channel.send(f"{char}'s ARMOR changed to {c.ARMOR}")
+        else:
+            await message.channel.send(f"Unknown stat: {stat}")
         c.save()
 
         return True
