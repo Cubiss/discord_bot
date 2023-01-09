@@ -290,4 +290,3 @@ class HappyAdventureModule(Module):
         )
 
         return True
-oh
