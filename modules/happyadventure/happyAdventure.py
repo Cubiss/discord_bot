@@ -47,9 +47,18 @@ class HappyAdventureModule(Module):
 
         self.addcom(
             Command(names=['stats'],
-                    function=self.stats
+                    function=self.stats,
+                    description='Display player\'s stats.'
                     )
         )
+
+        self.addcom(
+            Command(names=['coinflip'],
+                    function=self.coinflip,
+                    description='Toss a coin.'
+                    )
+        )
+
 
         self.chars = {
             'DW': 'Dwarf',
@@ -62,70 +71,72 @@ class HappyAdventureModule(Module):
         for char in self.chars:
             self.addcom(Command([f'a{char}ch', f'add{char}currenthp', f'add{char}currenthealth'],
                                 function=self.add,
-                                description=f'Add current {char} hp',
+                                description=f'Add current {self.chars[char]} hp',
                                 positional_parameters=OrderedDict([
                                         ('query', '__number__')
-                                    ])
+                                    ]),
+                                show_help=False
                                 ))
 
             self.addcom(Command([f'a{char}mh', f'add{char}maxhp', f'add{char}maxhealth'],
                                 function=self.add,
-                                description=f'Add current {char} hp',
+                                description=f'Add current {self.chars[char]} hp',
                                 positional_parameters=OrderedDict([
                                         ('query', '__number__')
-                                    ])
+                                    ]),
+                                show_help=False
                                 ))
 
             self.addcom(Command([f'a{char}a', f'add{char}currentarmor'],
                                 function=self.add,
-                                description=f'Add current {char} hp',
+                                description=f'Add current {self.chars[char]} armor',
                                 positional_parameters=OrderedDict([
                                         ('query', '__number__')
-                                    ])
+                                    ]),
+                                show_help=False
                                 ))
-
-            # self.addcom(Command([f'a{char}ma', f'add{char}maxarmor'],
-            #                     function=self.add,
-            #                     description=f'Add current {char} hp',
-            #                     positional_parameters=OrderedDict([
-            #                             ('query', '__number__')
-            #                         ])
-            #                     ))
 
             self.addcom(Command([f's{char}ch', f'set{char}currenthp', f'set{char}currenthealth'],
                                 function=self.set,
-                                description=f'Set current {char} hp',
+                                description=f'Set current {self.chars[char]} hp',
                                 positional_parameters=OrderedDict([
                                         ('query', '__number__')
-                                    ])
+                                    ]),
+                                show_help=False
                                 ))
 
             self.addcom(Command([f's{char}mh', f'set{char}maxhp', f'set{char}maxhealth'],
                                 function=self.set,
-                                description=f'Set current {char} hp',
+                                description=f'Set current {self.chars[char]} hp',
                                 positional_parameters=OrderedDict([
                                         ('query', '__number__')
-                                    ])
+                                    ]),
+                                show_help=False
                                 ))
 
             self.addcom(Command([f's{char}a', f'set{char}currentarmor'],
                                 function=self.set,
-                                description=f'Set current {char} hp',
+                                description=f'Set current {self.chars[char]} hp',
                                 positional_parameters=OrderedDict([
                                         ('query', '__number__')
-                                    ])
+                                    ]),
+                                show_help=False
                                 ))
 
-            # self.addcom(Command([f's{char}ma', f'set{char}maxarmor'],
-            #                     function=self.set,
-            #                     description=f'Set current {char} hp',
-            #                     positional_parameters=OrderedDict([
-            #                             ('query', '__number__')
-            #                         ])
-            #                     ))
+            self.addcom(Command([f'd{char}', f'damage{char}'],
+                                function=self.damage,
+                                description=f'Damage {self.chars[char]}',
+                                positional_parameters=OrderedDict([
+                                        ('query', '__number__')
+                                    ]),
+                                ))
+
 
         self.characters = Characters(self.db)
         self.characters.load()
+
+    async def coinflip(self, message: discord.Message, **_):
+        message.channel.send(f"The coin spins for a while... And it lands on **{random.choice(['HEADS', 'TAILS'])}**!")
 
     async def roll(self, message: discord.Message, count, faces, bonus, **__) -> bool:
         try:

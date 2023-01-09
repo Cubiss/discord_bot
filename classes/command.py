@@ -26,7 +26,7 @@ class Command:
 
     def __init__(self, names: list, function: callable, usage=None, description='',
                  permissions: list = None, timeout=5, flags: dict = None,
-                 positional_parameters: dict = None, named_parameters: dict = None):
+                 positional_parameters: dict = None, named_parameters: dict = None, show_help: bool = True):
         """
         Creates a command.
         :param named_parameters: Automatically generated string parameters
@@ -62,6 +62,7 @@ class Command:
         self.permissions = permissions
 
         self.timeout = timeout
+        self.show_help = show_help
 
     def is_match(self, text: str):
         if 'setsendchannel' in self.names:
@@ -118,8 +119,9 @@ class Command:
         try:
             return await self.function(**params)
         except Exception as ex:
-            await message.channel.send(f"ERROR: {ex}")
+            # await message.channel.send(f"ERROR: {ex}")
             return False
+
     async def send_help(self, message: discord.Message, names=None):
         if names is not None and len(names) > 0:
             pass

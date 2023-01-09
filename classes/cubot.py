@@ -153,7 +153,8 @@ class Cubot(discord.Client):
                 max_command_len = max([len(c.names[0]) for c in self.commands])
 
                 for command in self.commands:
-                    help_str += f'{command.names[0]:{max_command_len}}: {command.description}\n'
+                    if command.show_help:
+                        help_str += f'{command.names[0]:{max_command_len}}: {command.description}\n'
 
                 help_str += '```'
 
