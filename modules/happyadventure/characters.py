@@ -21,10 +21,10 @@ class Characters(Entity):
                          "Characters",
                          [Column('CHARACTER_ID', str, nullable=False, primary_key=True),
                           Column('ROLE', int),
-                          Column('HP', float, 0),
-                          Column('MAX_HP', float, 0),
-                          Column('ARMOR', float, 0),
-                          Column('MAX_ARMOR', float, 0),
+                          Column('HP', int, 0),
+                          Column('MAX_HP', int, 0),
+                          Column('ARMOR', int, 0),
+                          Column('MAX_ARMOR', int, 0),
                           ],
                          Character
                          )
@@ -41,4 +41,6 @@ class Characters(Entity):
                 raise Exception(f'Unknown charactrer_id: "{c.CHARACTER_ID}"')
 
         for cid in chars:
-            self.create(CHARACTER_ID=cid)
+            c = self.create(CHARACTER_ID=cid)
+            c.save()
+

@@ -177,7 +177,7 @@ class HappyAdventureModule(Module):
 
         char = message.content[2:4].upper()
         stat = message.content[4:6].lower()
-        query = float(query)
+        query = int(query)
 
         char = char.upper()
         if char.upper() not in self.chars:
@@ -190,13 +190,13 @@ class HappyAdventureModule(Module):
             c.MAX_HP = query
             await message.channel.send(f"{char}'s HP changed to {c.HP}/{c.MAX_HP}")
         elif stat == "ch":
-            c.HP = max(query, c.MAX_HP)
+            c.HP = min(query, c.MAX_HP)
             await message.channel.send(f"{char}'s HP changed to {c.HP}/{c.MAX_HP}")
         elif stat == 'ma':
             c.MAX_ARMOR = query
             await message.channel.send(f"{char}'s ARMOR changed to {c.ARMOR}/{c.MAX_ARMOR}")
         elif stat == 'ca':
-            c.ARMOR = max(query, c.MAX_ARMOR)
+            c.ARMOR = min(query, c.MAX_ARMOR)
             await message.channel.send(f"{char}'s ARMOR changed to {c.HP}/{c.MAX_HP}")
         c.save()
 
@@ -206,7 +206,7 @@ class HappyAdventureModule(Module):
 
         char = message.content[1:3].upper()
         stat = message.content[3:5].lower()
-        query = float(query)
+        query = int(query)
 
         char = char.upper()
         if char.upper() not in self.chars:
@@ -219,13 +219,13 @@ class HappyAdventureModule(Module):
             c.MAX_HP = c.MAX_HP + query
             await message.channel.send(f"{char}'s HP changed to {c.HP}/{c.MAX_HP}")
         elif stat == "ch":
-            c.HP = max(c.HP + query, c.MAX_HP)
+            c.HP = min(c.HP + query, c.MAX_HP)
             await message.channel.send(f"{char}'s HP changed to {c.HP}/{c.MAX_HP}")
         elif stat == 'ma':
             c.MAX_ARMOR = c.MAX_ARMOR + query
             await message.channel.send(f"{char}'s ARMOR changed to {c.ARMOR}/{c.MAX_ARMOR}")
         elif stat == 'ca':
-            c.ARMOR = max(c.ARMOR + query, c.MAX_ARMOR)
+            c.ARMOR = min(c.ARMOR + query, c.MAX_ARMOR)
             await message.channel.send(f"{char}'s ARMOR changed to {c.HP}/{c.MAX_HP}")
         c.save()
 
