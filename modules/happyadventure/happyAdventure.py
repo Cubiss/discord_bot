@@ -136,7 +136,7 @@ class HappyAdventureModule(Module):
         self.characters.load()
 
     async def coinflip(self, message: discord.Message, **_):
-        message.channel.send(f"The coin spins for a while... And it lands on **{random.choice(['HEADS', 'TAILS'])}**!")
+        await message.channel.send(f"The coin spins for a while... And it lands on **{random.choice(['HEADS', 'TAILS'])}**!")
 
     async def roll(self, message: discord.Message, count, faces, bonus, **__) -> bool:
         try:
