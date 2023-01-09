@@ -55,7 +55,8 @@ class HappyAdventureModule(Module):
             'DW': 'Dwarf',
             'EL': 'Elf',
             'HE': 'Half-elf',
-            'HU': 'Human'
+            'HU': 'Human',
+            'GN': 'Gnome'
         }
 
         for char in self.chars:
