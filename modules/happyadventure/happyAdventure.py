@@ -201,7 +201,7 @@ class HappyAdventureModule(Module):
         #     await message.channel.send(f"{char}'s ARMOR changed to {c.ARMOR}/{c.MAX_ARMOR}")
         elif stat == 'a ':
             c.ARMOR = min(query, c.MAX_ARMOR)
-            await message.channel.send(f"{char}'s ARMOR changed to {c.HP}/{c.MAX_HP}")
+            await message.channel.send(f"{char}'s ARMOR changed to {c.ARMOR}")
         else:
             await message.channel.send(f"Unknown stat: {stat}")
         c.save()
@@ -271,7 +271,7 @@ class HappyAdventureModule(Module):
                 if r.id == c.ROLE:
                     t = c__lib.format_table(
                             header=["CHAR", "HP", "ARMOR"],
-                            table=[[c.CHARACTER_ID, f"{c.HP}/{c.MAX_HP}", f"{c.ARMOR}/{c.MAX_ARMOR}"]]
+                            table=[[c.CHARACTER_ID, f"{c.HP}/{c.MAX_HP}", f"{c.ARMOR}"]]
                         )
 
                     await message.channel.send(
@@ -281,7 +281,7 @@ class HappyAdventureModule(Module):
                     )
                     return True
 
-            table.append([c.CHARACTER_ID, f"{c.HP}/{c.MAX_HP}", f"{c.ARMOR}/{c.MAX_ARMOR}"])
+            table.append([c.CHARACTER_ID, f"{c.HP}/{c.MAX_HP}", f"{c.ARMOR}"])
 
         t =  c__lib.format_table(
                 header=["CHAR", "HP", "ARMOR"],
