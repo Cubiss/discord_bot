@@ -6,7 +6,7 @@ from c__lib import seconds_to_czech_string
 from classes.module import *
 
 
-class CubotModule(Module):
+class StuffModule(Module):
     def __init__(self, **kwargs):
         super().__init__("cubot", **kwargs)
 
@@ -25,6 +25,8 @@ class CubotModule(Module):
                     )
         )
 
+        self.iq_cache = {}
+
     async def classic_release(self, message: discord.Message, **__) -> bool:
         time_str = seconds_to_czech_string(
             (
@@ -39,7 +41,11 @@ class CubotModule(Module):
         mention: discord.Member
         mention = message.mentions[0] if len(message.mentions) > 0 else message.author
 
-        iq = int(numpy.random.normal(100, 15))
+        if mention in self.iq_cache and self.iq_cache[mention][0] > datetime.datetime.now():
+            iq = self.iq_cache[mention][1]
+        else:
+            iq = int(numpy.random.normal(100, 15))
+            self.iq_cache[mention] = (datetime.datetime.now() + datetime.timedelta(hours=4), iq)
 
         await message.channel.send(f'{mention.name}\'s iq is {iq}.')
 

@@ -44,3 +44,10 @@ class Characters(Entity):
             c = self.create(CHARACTER_ID=cid)
             c.save()
 
+    def get_character_from_user(self, user):
+        for r in user.roles:
+            for c in self:
+                if r.id == c.ROLE:
+                    return c
+
+        return None

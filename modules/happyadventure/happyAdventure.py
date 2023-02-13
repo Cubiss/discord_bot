@@ -271,7 +271,6 @@ class HappyAdventureModule(Module):
         await message.channel.send(f"{self.chars[c.CHARACTER_ID]} took {dmg} damage! They now have {c.HP}/{c.MAX_HP} health.")
 
 
-
     async def setrole(self, message, char, role, **_):
         char = char.upper()
         if char not in self.chars:
@@ -296,30 +295,23 @@ class HappyAdventureModule(Module):
         await message.channel.send(c__lib.format_table(table))
 
     async def stats(self, message: discord.Message, **_):
-        roles = message.author.roles
+        # roles = message.author.roles
 
-        table = []
-        for c in self.characters:
-            for r in message.author.roles:
-                if r.id == c.ROLE:
-                    t = c__lib.format_table(
-                            header=["CHAR", "HP", "ARMOR"],
-                            table=[[self.chars[c.CHARACTER_ID], f"{c.HP}/{c.MAX_HP}", f"{c.ARMOR}"]]
-                        )
+        present_characters = []
 
-                    await message.channel.send(
-                        f"```"
-                        f"{t}"
-                        f"```"
-                    )
-                    return True
+        for m in message.channel.members:
+            c = self.characters.get_character_from_user(m)
 
-            table.append([self.chars[c.CHARACTER_ID], f"{c.HP}/{c.MAX_HP}", f"{c.ARMOR}"])
+            if c is not None:
+                present_characters.append(c)
+
+        if len(present_characters) == 0:
+            # no player in the channel, print all chars
+            present_characters = self.characters
 
         t = c__lib.format_table(
-                header=["CHAR", "HP", "ARMOR"],
-                table=table
-            )
+            header=["CHAR", "HP", "ARMOR"],
+            table=[[self.chars[c.CHARACTER_ID], f"{c.HP}/{c.MAX_HP}", f"{c.ARMOR}"] for c in present_characters])
 
         await message.channel.send(
             "```"
