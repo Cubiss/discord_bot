@@ -1,6 +1,7 @@
 import datetime
 import os
 import sys
+import shutil
 
 
 class Logger:
@@ -47,6 +48,18 @@ class Logger:
             i += 1
             if not os.path.isfile(os.path.join(log_dir, log_path)):
                 break
+
+        if openmode == 'w' and os.path.exists(log_path):
+            # backup old log
+            backup_path = ''
+
+            while 1:
+                backup_path = os.path.join(log_dir, datetime.date.today().strftime('%Y-%m-%d') + f'-{i}_' + base_log_name)
+                i += 1
+                if not os.path.isfile(os.path.join(log_dir, backup_path)):
+                    break
+
+            shutil.copyfile(log_path, backup_path)
 
         return Logger(
                     file=open(log_path, openmode, encoding=encoding),
