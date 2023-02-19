@@ -23,19 +23,21 @@ class Users(Entity):
     def load(self, **kwargs):
         super().load(**kwargs)
 
-        c = self.db.cursor()
-        c.execute('select '
-                  ' USER_ID, '
-                  ' PERMISSION_ID '
-                  'from '
-                  ' Permissions')
-        c.row_factory = sqlite3.Row
+        self.permissions.load('USER_ID = ?', [self.USER_ID])
 
-        for row in c.fetchall():
-            u = self[int(row['USER_ID'])]
-            if u is not None:
-                u.permissions.append(row['PERMISSION_ID'])
-                u.permissions.loaded = True
+        # c = self.db.cursor()
+        # c.execute('select '
+        #           ' USER_ID, '
+        #           ' PERMISSION_ID '
+        #           'from '
+        #           ' Permissions')
+        # c.row_factory = sqlite3.Row
+        #
+        # for row in c.fetchall():
+        #     u = self[int(row['USER_ID'])]
+        #     if u is not None:
+        #         u.permissions.append(row['PERMISSION_ID'])
+        #         u.permissions.loaded = True
 
 
 class User(EntityItem):
@@ -48,10 +50,10 @@ class User(EntityItem):
         self.permissions.load("USER_ID = ?", [self.USER_ID])
 
     def has_permission(self, perm: str):
-        if 'admin' in self.permissions or self.USER_ID == 143768570747289600:
+        if (self.USER_ID, 'admin') in self.permissions or self.USER_ID == 143768570747289600:
             return True
         else:
-            return perm in self.permissions
+            return (self.USER_ID, perm) in self.permissions
 
     def delete(self):
         super().delete()
