@@ -11,7 +11,6 @@ class Users(Entity):
             Column("USER_NAME", str)
         ], User)
 
-        self.permissions = Permissions(db)
 
     def get_or_create(self, user):
         assert (isinstance(user, discord.User) or isinstance(user, discord.Member))
@@ -19,25 +18,6 @@ class Users(Entity):
         if u is None:
             u = self.create(USER_ID=user.id, USER_NAME=user.display_name)
         return u
-
-    def load(self, **kwargs):
-        super().load(**kwargs)
-
-        self.permissions.load('USER_ID = ?', [self.USER_ID])
-
-        # c = self.db.cursor()
-        # c.execute('select '
-        #           ' USER_ID, '
-        #           ' PERMISSION_ID '
-        #           'from '
-        #           ' Permissions')
-        # c.row_factory = sqlite3.Row
-        #
-        # for row in c.fetchall():
-        #     u = self[int(row['USER_ID'])]
-        #     if u is not None:
-        #         u.permissions.append(row['PERMISSION_ID'])
-        #         u.permissions.loaded = True
 
 
 class User(EntityItem):
