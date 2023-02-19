@@ -13,7 +13,8 @@ class UtilitiesModule(Module):
                         'is_global': '--global'},
                     positional_parameters={
                         'mention': '__mention__?',
-                    }
+                    },
+                    help_scope=Command.help_scope_global
                     )
         )
 

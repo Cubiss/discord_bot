@@ -19,7 +19,7 @@ class Module:
 
         self.commands = []
 
-        self.log = log or Logger(file=None, use_stdout=True, log_file_writes=False, add_timestamps=True)
+        self.log = log or Logger(files=None, use_stdout=True, log_file_writes=False, add_timestamps=True)
         self.on_message_hook_priority = 0
 
     def addcom(self, command: Command):
@@ -30,3 +30,19 @@ class Module:
 
     def __repr__(self):
         return f"<Module({self.name})>"
+
+    async def send_help(self, message: discord.Message):
+        help_str = '```'
+        help_str += f'Available commands in \'{self.name}\' module:\n'
+
+        max_command_len = max([len(c.name) for c in self.commands])
+
+        for command in self.commands:
+            command: Command
+            if command.help_scope_in(Command.help_scope_module):
+                help_str += f'{command.name:{max_command_len}}: {command.description}\n'
+
+        help_str += '```'
+
+        self.log(help_str)
+        return await message.channel.send(help_str)

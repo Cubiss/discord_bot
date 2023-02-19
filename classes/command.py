@@ -24,9 +24,25 @@ class Command:
         '__all__': r'.*?'
     }
 
+    _help_scopes = [
+        'global',
+        'module',
+        'command'
+    ]
+
+    help_scope_global = 'global'
+    help_scope_module = 'module'
+    help_scope_command = 'command'
+
+    @property
+    def name(self):
+        if self.names is None or len(self.names) == 0:
+            return '<Unnamed command>'
+        return self.names[0]
+
     def __init__(self, names: list, function: callable, usage=None, description='',
                  permissions: list = None, timeout=5, flags: dict = None,
-                 positional_parameters: dict = None, named_parameters: dict = None, show_help: bool = True):
+                 positional_parameters: dict = None, named_parameters: dict = None, help_scope: str = 'module'):
         """
         Creates a command.
         :param named_parameters: Automatically generated string parameters
@@ -36,33 +52,42 @@ class Command:
         :param usage: String showing how the command should be called.
         :param description: String saying what command should do.
         """
-        self.db = None
-        self.names = [n.lower() for n in names]
+        try:
+            self.db = None
+            self.names = [n.lower() for n in names]
 
-        self.function = function
+            self.function = function
 
-        self.flags = flags or {}
-        self.positional_parameters = self.replace_prefabs(positional_parameters) or {}
-        self.named_parameters = self.replace_prefabs(named_parameters) or {}
+            self.flags = flags or {}
+            self.positional_parameters = self.replace_prefabs(positional_parameters) or {}
+            self.named_parameters = self.replace_prefabs(named_parameters) or {}
 
-        self.regex = self.update_regexp()
+            self.regex = self.update_regexp()
 
-        # check if regex contains invalid groups
-        for group_name in self.regex.groupindex:
-            if group_name in Command.command_parameters:
-                raise Exception(f"Wrong command regexp: group name '{group_name}' is reserved.")
+            # check if regex contains invalid groups
+            for group_name in self.regex.groupindex:
+                if group_name in Command.command_parameters:
+                    raise Exception(f"Wrong command regexp: group name '{group_name}' is reserved.")
 
-        self.usage = usage or self.build_usage()
+            # check help_scope
+            if help_scope not in Command._help_scopes:
+                raise Exception(f"Invalid help scope: '{help_scope}'\n"
+                                f"Valid scopes:{', '.join(Command._help_scopes)}")
+            self.help_scope = help_scope
 
-        self.description = description
-        if permissions is None:
-            permissions = []
-        if type(permissions) == str:
-            permissions = [permissions]
-        self.permissions = permissions
+            self.usage = usage or self.build_usage()
 
-        self.timeout = timeout
-        self.show_help = show_help
+            self.description = description
+            if permissions is None:
+                permissions = []
+            if type(permissions) == str:
+                permissions = [permissions]
+            self.permissions = permissions
+
+            self.timeout = timeout
+
+        except Exception as ex:
+            raise Exception(f'[{self.name}] {ex}')
 
     def is_match(self, text: str):
         if 'setsendchannel' in self.names:
@@ -93,14 +118,14 @@ class Command:
 
     async def execute(self, message: discord.Message, client: discord.Client, users: Users, log, text=None):
         if not self.user_has_permission(users.get_or_create(message.author)):
-            return await message.channel.send(self._format_message(message=message,
-                                                                   string="__author__ you can't do that!"))
+            return await message.channel.send(self.format_message(message=message,
+                                                                  string="__author__ you can't do that!"))
         # get regex parsed arguments
 
         match = self.regex.match(text or message.content)
         if match is None:
             # no regex match found, return a usage message
-            return await message.channel.send(self._format_message(message=message, string=self.usage))
+            return await message.channel.send(self.format_message(message=message, string=f'Usage: {self.usage}'))
 
         # parse arguments for the command function
 
@@ -126,13 +151,18 @@ class Command:
         if names is not None and len(names) > 0:
             pass
 
-        await message.channel.send(self._format_message(
-            message=message, string=','.join(self.names) + '\n' + self.description + '\n' + self.usage))
+        help_msg = '```\n'
+        help_msg += f"Names:       {', '.join(self.names)}\n"
+        help_msg += f"Description: {self.description}\n"
+        help_msg += f"Usage:       {self.usage}\n"
+        help_msg += '```'
 
-    def _format_message(self, string: str, message: discord.Message):
+        await message.channel.send(self.format_message(message=message, string=help_msg))
+
+    def format_message(self, string: str, message: discord.Message):
         if string is None:
             return None
-        string = string.replace('__name__', self.names[0])
+        string = string.replace('__name__', self.name)
         string = string.replace('__author__', f'<@{message.author.id}>')
         return string
 
@@ -140,7 +170,7 @@ class Command:
         if self.names is None or len(self.names) == 0:
             return f'<Command() - uninitialized'
         else:
-            return f'<Command({self.names[0]}) -> {repr(self.function)}>'
+            return f'<Command({self.name}) -> {repr(self.function)}>'
 
     def update_regexp(self):
         regexp = "^__name__"
@@ -205,7 +235,7 @@ class Command:
         return params
 
     def build_usage(self):
-        usage = f'Usage: {self.names[0]} '
+        usage = f'{self.name} '
         for f in self.flags:
             usage += f'[{f}] '
 
@@ -215,6 +245,31 @@ class Command:
         for opt in self.named_parameters:
             usage += f'[{opt}]'
         return usage
+
+    def help_scope_in(self, scope):
+        if scope not in Command._help_scopes:
+            raise Exception(f"Invalid help scope: '{scope}'\n"
+                            f"Valid scopes:{', '.join(Command._help_scopes)}")
+
+        if scope == Command.help_scope_global:
+            return self.help_scope in [
+                Command.help_scope_global
+            ]
+
+        if scope == Command.help_scope_module:
+            return self.help_scope in [
+                Command.help_scope_global,
+                Command.help_scope_module
+            ]
+
+        if scope == Command.help_scope_command:
+            return self.help_scope in [
+                Command.help_scope_global,
+                Command.help_scope_module,
+                Command.help_scope_command
+            ]
+
+        raise Exception(f"Scope not implemented: {scope}")
 
 
 def change_key(d: OrderedDict, old, new):

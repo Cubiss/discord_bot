@@ -5,8 +5,8 @@ import shutil
 
 
 class Logger:
-    def __init__(self, file, use_stdout, log_file_writes, add_timestamps):
-        self.file = file
+    def __init__(self, files, use_stdout, log_file_writes, add_timestamps):
+        self.files = files
         self.use_stdout = use_stdout
         self.log_file_writes = log_file_writes
         self.add_timestamps = add_timestamps
@@ -14,13 +14,14 @@ class Logger:
     def log(self, *args, **kwargs):
         if self.add_timestamps and len(args) > 0:
             args = (datetime.datetime.now(), ) + args
-        if self.file is not None:
-            if 'file' not in kwargs or self.log_file_writes or kwargs['file'] in [sys.stderr, sys.stdout]:
-                fkwargs = kwargs.copy()
-                fkwargs['file'] = self.file
+        if self.files is not None:
+            for f in self.files:
+                if 'file' not in kwargs or self.log_file_writes or kwargs['file'] in [sys.stderr, sys.stdout]:
+                    fkwargs = kwargs.copy()
+                    fkwargs['file'] = f
 
-                print(*args, **fkwargs)
-                self.file.flush()
+                    print(*args, **fkwargs)
+                    f.flush()
             pass
         if self.use_stdout:
             print(*args, **kwargs)
@@ -29,39 +30,55 @@ class Logger:
         self.log(*args, **kwargs)
 
     @staticmethod
-    def create_logger(path: str,
-                      create_unique_file=False,
+    def create_logger(log_dir: str,
+                      create_latest=True,
                       openmode='w',
                       encoding='utf8',
-                      add_timestamps=False,
+                      add_timestamps=True,
                       use_stdout=True):
-        assert (isinstance(path, str))
+
+        assert (isinstance(log_dir, str))
         assert (isinstance(openmode, str))
         assert (isinstance(encoding, str))
-        i = 0
-        base_log_name = os.path.basename(path)
-        log_dir = os.path.dirname(path)
+
         os.makedirs(log_dir, exist_ok=True)
-        log_path = path
-        while create_unique_file:
-            log_path = os.path.join(log_dir, datetime.date.today().strftime('%Y-%m-%d') + f'-{i}_' + base_log_name)
-            i += 1
-            if not os.path.isfile(os.path.join(log_dir, log_path)):
-                break
 
-        if openmode == 'w' and os.path.exists(log_path):
-            # backup old log
-            backup_path = ''
+        i = 0
+        files = []
 
-            while 1:
-                backup_path = os.path.join(log_dir, datetime.date.today().strftime('%Y-%m-%d') + f'-{i}_' + base_log_name)
+        while 1:
+            current_log_path = os.path.join(
+                log_dir, datetime.date.today().strftime('%Y-%m-%d') + f'-{i}.log'
+            )
+
+            if os.path.isfile(current_log_path) and openmode != 'a':
                 i += 1
-                if not os.path.isfile(os.path.join(log_dir, backup_path)):
-                    break
+                continue
 
-            shutil.copyfile(log_path, backup_path)
+            files.append(open(current_log_path, openmode, encoding=encoding))
+            break
+
+        if create_latest:
+            files.append(open(os.path.join(log_dir, 'latest.log'), 'w', encoding=encoding))
 
         return Logger(
-                    file=open(log_path, openmode, encoding=encoding),
+                    files=files,
                     add_timestamps=add_timestamps,
-                    use_stdout=use_stdout, log_file_writes=False)
+                    use_stdout=use_stdout,
+                    log_file_writes=False
+        )
+
+    @staticmethod
+    def get_unique_filename(directory, filename):
+        i = 0
+
+        fn, ext = os.path.splitext(filename)
+
+        newname = f"{fn}-{datetime.date.today().strftime('%Y-%m-%d')}.{ext}"
+
+        while os.path.isfile(os.path.join(directory, newname)):
+            i += 1
+            newname = f"{fn}-{datetime.date.today().strftime('%Y-%m-%d')}.{ext}"
+
+        return newname
+        pass

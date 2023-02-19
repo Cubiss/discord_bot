@@ -16,7 +16,7 @@ class CommandTree(Command):
                     if n in _names:
                         raise Exception(f"Duplicate subcommand name: {n}")
                     _names.add(n)
-                self.children[c.names[0]] = c
+                self.children[c.name] = c
 
             # self.regex = self.update_regexp()
 
@@ -25,7 +25,7 @@ class CommandTree(Command):
 
             pass
         except Exception as ex:
-            raise Exception(f"CommandTree({self.names[0]})")
+            raise Exception(f"CommandTree({self.name})")
 
     def update_regexp(self):
         c: Command
@@ -43,7 +43,7 @@ class CommandTree(Command):
                                                                     text=subcommand)
 
     def build_usage(self):
-        return f'Allowed commands: {self.names[0]} ({"|".join(self.children)})'
+        return f'Allowed commands: {self.name} ({"|".join(self.children)})'
 
     async def send_help(self, message: discord.Message, names=None):
         if names is not None and len(names) > 0:
@@ -59,4 +59,4 @@ class CommandTree(Command):
         if self.names is None or len(self.names) == 0:
             return f'<CommandTree() - uninitialized'
         else:
-            return f'<CommandTree({self.names[0]}) -> {repr(self.function)}>'
+            return f'<CommandTree({self.name}) -> {repr(self.function)}>'

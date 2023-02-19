@@ -23,7 +23,8 @@ class HappyAdventureModule(Module):
                     positional_parameters=OrderedDict([
                         ('dice', r'((?P<count>\d*)d(?P<faces>\d+))?'),
                         ('bonus_info', r'((?P<bonus_sign>\+|\-)(?P<bonus>\d*))?')
-                        ])
+                        ]),
+                    help_scope=Command.help_scope_global
                     )
         )
 
@@ -41,7 +42,7 @@ class HappyAdventureModule(Module):
         self.addcom(
             Command(names=['listroles'],
                     function=self.listroles,
-                    description='List roles for all characters.'
+                    description='List roles for all characters.',
                     )
         )
 
@@ -55,7 +56,8 @@ class HappyAdventureModule(Module):
         self.addcom(
             Command(names=['coinflip'],
                     function=self.coinflip,
-                    description='Toss a coin.'
+                    description='Toss a coin.',
+                    help_scope=Command.help_scope_global
                     )
         )
 
@@ -74,8 +76,7 @@ class HappyAdventureModule(Module):
                                 description=f'Add current {self.chars[char]} hp',
                                 positional_parameters=OrderedDict([
                                         ('query', '__number__')
-                                    ]),
-                                show_help=False
+                                    ])
                                 ))
 
             self.addcom(Command([f'a{char}mh', f'add{char}maxhp', f'add{char}maxhealth'],
@@ -83,8 +84,7 @@ class HappyAdventureModule(Module):
                                 description=f'Add current {self.chars[char]} hp',
                                 positional_parameters=OrderedDict([
                                         ('query', '__number__')
-                                    ]),
-                                show_help=False
+                                    ])
                                 ))
 
             self.addcom(Command([f'a{char}a', f'add{char}currentarmor'],
@@ -92,8 +92,7 @@ class HappyAdventureModule(Module):
                                 description=f'Add current {self.chars[char]} armor',
                                 positional_parameters=OrderedDict([
                                         ('query', '__number__')
-                                    ]),
-                                show_help=False
+                                    ])
                                 ))
 
             self.addcom(Command([f's{char}ch', f'set{char}currenthp', f'set{char}currenthealth'],
@@ -101,8 +100,7 @@ class HappyAdventureModule(Module):
                                 description=f'Set current {self.chars[char]} hp',
                                 positional_parameters=OrderedDict([
                                         ('query', '__number__')
-                                    ]),
-                                show_help=False
+                                    ])
                                 ))
 
             self.addcom(Command([f's{char}mh', f'set{char}maxhp', f'set{char}maxhealth'],
@@ -110,8 +108,7 @@ class HappyAdventureModule(Module):
                                 description=f'Set current {self.chars[char]} hp',
                                 positional_parameters=OrderedDict([
                                         ('query', '__number__')
-                                    ]),
-                                show_help=False
+                                    ])
                                 ))
 
             self.addcom(Command([f's{char}a', f'set{char}currentarmor'],
@@ -119,8 +116,7 @@ class HappyAdventureModule(Module):
                                 description=f'Set current {self.chars[char]} hp',
                                 positional_parameters=OrderedDict([
                                         ('query', '__number__')
-                                    ]),
-                                show_help=False
+                                    ])
                                 ))
 
             self.addcom(Command([f'd{char}', f'damage{char}'],
@@ -130,7 +126,6 @@ class HappyAdventureModule(Module):
                                         ('query', '__number__')
                                     ]),
                                 ))
-
 
         self.characters = Characters(self.db)
         self.characters.load()

@@ -119,7 +119,7 @@ class Cubot(discord.Client):
                                  f'{message.author}: '
                                  f'{message.content}'
                                  ' -> '
-                                 f'Command: {command.names[0]}, Timeout: {command.timeout}'
+                                 f'Command: {command.name}, Timeout: {command.timeout}'
                                  )
 
                     await asyncio.wait_for(
@@ -129,8 +129,8 @@ class Cubot(discord.Client):
 
                 except asyncio.TimeoutError:
                     if self.log_commands:
-                        self.log(f'{command.names[0]} timed out.')
-                    await message.reply(command._format_message(
+                        self.log(f'{command.name} timed out.')
+                    await message.reply(command.format_message(
                         f"__author__ Sorry, I don't have enough time for this.", message))
                 except Exception as ex:
                     self.log(message.author)
@@ -150,11 +150,12 @@ class Cubot(discord.Client):
                 help_str = '```'
                 help_str += 'Available commands:\n'
 
-                max_command_len = max([len(c.names[0]) for c in self.commands])
+                max_command_len = max([len(c.name) for c in self.commands])
 
                 for command in self.commands:
-                    if command.show_help:
-                        help_str += f'{command.names[0]:{max_command_len}}: {command.description}\n'
+                    command: Command
+                    if command.help_scope_in(Command.help_scope_global):
+                        help_str += f'{command.name:{max_command_len}}: {command.description}\n'
 
                 help_str += '```'
 
@@ -164,13 +165,17 @@ class Cubot(discord.Client):
             while len(names) > 0:
                 name = names.pop(0).lower()
 
+                for module in self.modules:
+                    module: Module
+                    if module.name.lower() == name.lower():
+                        return await module.send_help(message)
+
                 for command in self.commands:
                     if name in command.names:
                         return await command.send_help(message, names=names)
 
                 else:
                     return await message.channel.send(f'Command "{name}" not found.')
-
 
     def load_modules(self, modules):
         for cls in modules:

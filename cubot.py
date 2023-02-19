@@ -94,9 +94,9 @@ def main():
                             help='Don\'t add timestamps to log file.')
         args = parser.parse_args()
         if args.log is None:
-            log = Logger(file=None, use_stdout=True, log_file_writes=False, add_timestamps=not args.no_timestamps)
+            log = Logger(files=None, use_stdout=True, log_file_writes=False, add_timestamps=not args.no_timestamps)
         else:
-            log = Logger.create_logger(path=args.log, add_timestamps=not args.no_timestamps)
+            log = Logger.create_logger(log_dir=args.log, add_timestamps=not args.no_timestamps)
         bot = Cubot(log_commands=True, log_function=log, database=args.db)
         run_bot(bot, open(args.token, 'r').read().strip())
     except Exception as ex:
