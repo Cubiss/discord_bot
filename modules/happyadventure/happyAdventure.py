@@ -158,11 +158,8 @@ class HappyAdventureModule(Module):
         rolls = []
         rolls_str = []
 
-        if bonus == int(bonus):
-            bonus = int(bonus / count)
-
         for i in range(0, count):
-            result = random.randint(1, faces) + bonus
+            result = random.randint(1, faces)
             rolls.append(result)
             rolls_str.append(str(result))
             if i % 420 == 0:
@@ -175,11 +172,11 @@ class HappyAdventureModule(Module):
 
         if len(rolls) == 1:
             await message.channel.send(
-                f'Rolling d{faces}{bonus_msg}... Your rolled **{sum(rolls)}**!')
+                f'Rolling d{faces}{bonus_msg}... Your rolled **{sum(rolls) + bonus}**!')
         else:
             avgstr = f'{sum(rolls) / len(rolls):.2f}'
 
-            msg = f'Rolling {count}d{faces}{bonus_msg}...\n {"... ".join(rolls_str)}... \nYour result is **{sum(rolls)}**!\nAverage roll was {avgstr}'
+            msg = f'Rolling {count}d{faces}{bonus_msg}...\n {"... ".join(rolls_str)}... \nYour result is **{sum(rolls) + bonus}**!\nAverage roll was {avgstr}'
 
             if len(msg) > 1900:
                 msg = f'Rolling {count}d{faces}{bonus_msg}... \nYour result is **{sum(rolls)}**!\nAverage roll was {avgstr}'
