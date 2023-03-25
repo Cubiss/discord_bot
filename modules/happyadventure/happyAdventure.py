@@ -158,10 +158,10 @@ class HappyAdventureModule(Module):
         rolls = []
         rolls_str = []
 
-        for i in range(0, count):
-            if bonus == int(bonus):
-                bonus = int(bonus/count)
+        if bonus == int(bonus):
+            bonus = int(bonus / count)
 
+        for i in range(0, count):
             result = random.randint(1, faces) + bonus
             rolls.append(result)
             rolls_str.append(str(result))
