@@ -28,7 +28,7 @@ class Entity:
         if entity_item_type is not None and not issubclass(entity_item_type, EntityItem):
             raise Exception(f"{entity_item_type} is not subclass of {EntityItem}")
 
-        self.entity_item_type = entity_item_type or EntityItem
+        self.entity_item_type = entity_item_type or type(f'{self.name}_auto_generated_item', (EntityItem,), {})
         self._items = {}
 
         self.loaded = False

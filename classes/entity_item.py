@@ -2,6 +2,8 @@ import sqlite3
 
 
 class EntityItem:
+    _is_initialized = False
+
     def __init__(self, db: sqlite3.Connection, entity, db_values: dict = None, new=True):
         try:
             self.db = db
@@ -18,6 +20,9 @@ class EntityItem:
             raise Exception(f"Error creating EntityItem: {ex}")
 
     def initialize(self, values):
+        if '_auto_generated_item' in self.__class__.__name__:
+            pass
+
         pks = self.get_primary_key_columns()
 
         for column in self.entity.columns:
@@ -26,42 +31,48 @@ class EntityItem:
             else:
                 value = column.default
 
-            if column.name in pks:
-                storage_name = "_" + column.name
-                setattr(self, storage_name, column.convert(value))
-
-                # noinspection PyShadowingNames
-                def make_getter(storage_name):
-                    # noinspection PyShadowingNames
-                    def getter(self):
-                        return getattr(self, storage_name)
-                    return getter
-
-                # noinspection PyShadowingNames
-                def make_setter(storage_name):
-                    # noinspection PyShadowingNames
-                    def setter(self, value):
-                        if not hasattr(self, storage_name):
-                            return
-                        setattr(self, storage_name, column.convert(value))
-                        self._update_primary_key()
-                    return setter
-
-                # noinspection PyShadowingNames
-                def make_deleter(storage_name):
-                    # noinspection PyShadowingNames
-                    def deleter(self):
-                        delattr(self, storage_name)
-                    return deleter
-
-                setattr(type(self), column.name,
-                        property(make_getter(storage_name), make_setter(storage_name), make_deleter(storage_name),
-                                 f"{self.__class__.__name__}.{column.name} property."))
+            if column.name in pks and not hasattr(self, column.name):
+                self.initialize_pk_property(column, value)
             else:
                 setattr(self, column.name, column.convert(value))
 
         self._update_primary_key()
         self.loaded = True
+
+    def initialize_pk_property(self, column, value):
+        storage_name = "_" + column.name
+        setattr(self, storage_name, value)
+
+        # noinspection PyShadowingNames
+        def make_getter(storage_name):
+            # noinspection PyShadowingNames
+            def getter(self):
+                return getattr(self, storage_name)
+
+            return getter
+
+        # noinspection PyShadowingNames
+        def make_setter(storage_name):
+            # noinspection PyShadowingNames
+            def setter(self, value):
+                if not hasattr(self, storage_name):
+                    return
+                setattr(self, storage_name, column.convert(value))
+                self._update_primary_key()
+
+            return setter
+
+        # noinspection PyShadowingNames
+        def make_deleter(storage_name):
+            # noinspection PyShadowingNames
+            def deleter(self):
+                delattr(self, storage_name)
+
+            return deleter
+
+        setattr(type(self), column.name,
+                property(make_getter(storage_name), make_setter(storage_name), make_deleter(storage_name),
+                         f"{self.__class__.__name__}.{column.name} property."))
 
     def load(self, rowid=None):
         selector = ""
@@ -158,4 +169,4 @@ class EntityItem:
         return self._primary_key
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self.primary_key})'
+        return f'EntityItem<{self.__class__.__name__}>({self.primary_key})'

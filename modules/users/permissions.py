@@ -7,7 +7,8 @@ class Permissions(Entity):
     def __init__(self, db: sqlite3.Connection):
         super().__init__(db, "Permissions", [
                          Column("USER_ID", int, nullable=False, primary_key=True),
-                         Column("PERMISSION_ID", str, nullable=False, primary_key=True)]
+                         Column("PERMISSION_ID", str, nullable=False, primary_key=True)],
+                         Permission
                          )
 
     def has_permission(self, user, permission):
