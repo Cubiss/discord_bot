@@ -94,7 +94,7 @@ class ReactorModule(Module):
             reaction = self.reactions.delete(int(reactor_id))
 
             await message.channel.send(f"{message.author.mention} removed {reaction.USER_NAME}'s "
-                                       f"{reaction.get_emote()} reactor.")
+                                       f"{reaction.EMOTE} reactor.")
 
             return True
         except Exception as ex:
