@@ -11,7 +11,7 @@ class UtilitiesModule(Module):
         self.addcom(
             Command(names=['profilepicture', 'profilepic', 'pp'],
                     function=self.profile_picture, usage='__author__ Usage: !profilepicture [@mention][--global]',
-                    description='Displays profile picture of you or a mentioned user.',
+                    description='Displays zoomable profile picture of you or a mentioned user.',
                     flags={
                         'is_global': '--global'},
                     positional_parameters={

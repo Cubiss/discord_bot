@@ -17,8 +17,8 @@ class HelpModule(Module):
             **kwargs)
 
         self.addcom(
-            Command(names=['help', 'h'], function=self.send_help,
-                    usage='__author__ Usage: !test __any__', description='Test command.',
+            Command(names=['help', 'h'], function=self.help,
+                    usage='__author__ Usage: !test __any__', description='Send help message.',
                     positional_parameters=OrderedDict([
                         ("msgcontent", r'__any__')
                     ]))
