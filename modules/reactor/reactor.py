@@ -25,12 +25,12 @@ class ReactorModule(Module):
                         flags={
                             'is_global': '-global'},
                         positional_parameters=OrderedDict([
-                            ('mention', r'__mention__'),
-                            ('emote', r'__any__')
+                            ('mention', PARAM_PREFAB_MENTION),
+                            ('emote', PARAM_PREFAB_ANY)
                             ]),
                         named_parameters={
-                            'chance': r'__number__',
-                            'cooldown': r'__integer__'
+                            'chance': PARAM_PREFAB_NUMBER,
+                            'cooldown': PARAM_PREFAB_INTEGER
                         }
                     ),
                     Command(
@@ -46,7 +46,7 @@ class ReactorModule(Module):
                         function=self.remove_reactor,
                         description='Remove reactor.',
                         positional_parameters={
-                            'reactor_id': '__integer__'
+                            'reactor_id': PARAM_PREFAB_INTEGER
                         }
                     )
                 ],
@@ -91,7 +91,7 @@ class ReactorModule(Module):
     async def remove_reactor(self, message: discord.Message, reactor_id, **__) -> bool:
         try:
             reaction: Reaction
-            reaction = self.reactions.delete(reactor_id)
+            reaction = self.reactions.delete(int(reactor_id))
 
             await message.channel.send(f"{message.author.mention} removed {reaction.USER_NAME}'s "
                                        f"{reaction.get_emote()} reactor.")

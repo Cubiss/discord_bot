@@ -4,12 +4,11 @@ import discord
 import datetime
 import sqlite3
 import os
-import re
 
 from c__lib import yes_no_input
 
 from modules.users.users import Users
-from classes.command import Command
+from classes.command.command import Command
 from classes.module import Module
 
 

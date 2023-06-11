@@ -24,7 +24,7 @@ class UtilitiesModule(Module):
         self.addcom(
             Command(names=['get_id'], function=self.get_user_id,
                     positional_parameters={
-                        'mention': '__mention__'
+                        'mention': PARAM_PREFAB_MENTION
                     },
                     usage='__author__ Usage: !get_id <@mention>',
                     description='Displays discord id of mentioned user. (For devs mainly.)')

@@ -152,7 +152,7 @@ class EntityItem:
         self.db.commit()
 
     def get_primary_key_columns(self):
-        return self.entity.get_primary_key_columns()
+        return self.entity.get_primary_key_column_names()
 
     def _update_primary_key(self, pks=None):
         if pks is None:

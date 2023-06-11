@@ -1,7 +1,7 @@
 import discord
 import re
 
-from .command import Command
+from classes.command.command import Command
 from modules.users.users import Users
 
 

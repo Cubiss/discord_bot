@@ -1,8 +1,6 @@
 import discord
-import sqlite3
 
-from classes.command import Command
-from classes.commandTree import CommandTree
+from classes.command import *
 from classes.logger import Logger
 
 

@@ -1,4 +1,6 @@
 import sqlite3
+from collections import OrderedDict
+
 from .entity_item import EntityItem
 import datetime
 
@@ -22,8 +24,13 @@ class Entity:
 
         self.column_dict = {}
 
+        self.primary_key_dict = OrderedDict()
+
         for c in columns:
+            c: Column
             self.column_dict[c.name] = c
+            if c.primary_key:
+                self.primary_key_dict[c.name] = c
 
         if entity_item_type is not None and not issubclass(entity_item_type, EntityItem):
             raise Exception(f"{entity_item_type} is not subclass of {EntityItem}")
@@ -44,7 +51,7 @@ class Entity:
         return new_item
 
     def delete(self, primary_key):
-        if primary_key in self._items:
+        if primary_key in self:
             item: EntityItem
             item = self._items.pop(primary_key)
             item.delete()
@@ -142,13 +149,8 @@ class Entity:
     def values(self):
         return self._items.values()
 
-    def get_primary_key_columns(self):
-        primary_keys = ()
-        for col in self.columns:
-            if col.primary_key:
-                primary_keys = primary_keys + (col.name, )
-
-        return primary_keys
+    def get_primary_key_column_names(self):
+        return tuple(self.primary_key_dict.keys())
 
     def __repr__(self):
         return f'Entity<{self.name}[{len(self)}]>'

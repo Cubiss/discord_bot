@@ -1,10 +1,17 @@
 import re
 from collections import OrderedDict
+from modules.users.users import Users, User
 
 import discord
-from collections.abc import Iterable
 
-from modules.users.users import Users, User
+
+PARAM_PREFAB_INTEGER = '__integer__'
+PARAM_PREFAB_MENTION = '__mention__'
+PARAM_PREFAB_ROLE = '__role__'
+PARAM_PREFAB_CHANNEL = '__channel__'
+PARAM_PREFAB_NUMBER = '__number__'
+PARAM_PREFAB_ANY = '__any__'
+PARAM_PREFAB_ALL = '__all__'
 
 
 class Command:
@@ -12,24 +19,17 @@ class Command:
     # message: discord.Message to which the command is reacting
     # db: database assigned to the bot
     # client: reference to Cubot
+    # user: user calling the command
     command_parameters = ['message', 'db', 'client', 'user']
-
-    PARAM_PREFAB_INTEGER = '__integer__'
-    PARAM_PREFAB_MENTION = '__mention__'
-    PARAM_PREFAB_ROLE = '__role__'
-    PARAM_PREFAB_CHANNEL = '__channel__'
-    PARAM_PREFAB_NUMBER = '__number__'
-    PARAM_PREFAB_ANY = '__any__'
-    PARAM_PREFAB_ALL = '__all__'
 
     _param_prefabs = {
         PARAM_PREFAB_INTEGER: r'\d*',
         PARAM_PREFAB_MENTION: r'<@(?P<__value__>.*?)>',
-        PARAM_PREFAB_ROLE: r'<@&(?P<__value__>.*?)>',
+        PARAM_PREFAB_ROLE:  r'<@&(?P<__value__>.*?)>',
         PARAM_PREFAB_CHANNEL: r'<#(?P<__value__>.*?)>',
         PARAM_PREFAB_NUMBER: r'(\+|\-)?\d?\.?\d+%?',
         PARAM_PREFAB_ANY: r'".+?"|\S+',
-        PARAM_PREFAB_ALL: r'.*?'
+        PARAM_PREFAB_ALL: r'.*?',
     }
 
     HELP_SCOPE_GLOBAL = 'global'

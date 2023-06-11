@@ -20,13 +20,13 @@ class AdministrationModule(Module):
             Command(names=['test', 't'], function=self.test,
                     usage='__author__ Usage: !test __any__', description='Test command.',
                     positional_parameters=OrderedDict([
-                        ("msgcontent", r'__any__')
+                        ("msgcontent", PARAM_PREFAB_ANY)
                     ]))
         )
 
         self.addcom(
             Command(names=['change_username', 'cu'], function=self.change_username,
-                    positional_parameters={'name': '__any__'},
+                    positional_parameters={'name': PARAM_PREFAB_ANY},
                     usage=f'__author__ Usage: !change_username <username>', description='Changes the bot''s username.')
         )
 
@@ -39,24 +39,24 @@ class AdministrationModule(Module):
                         names=['add'],
                         function=self.add_permission,
                         positional_parameters=OrderedDict([
-                            ('mention', '__mention__'),
-                            ('permission', '__any__')
+                            ('mention', PARAM_PREFAB_MENTION),
+                            ('permission', PARAM_PREFAB_ANY)
                             ])
                     ),
                     Command(
                         names=['remove'],
                         function=self.remove_permission,
                         positional_parameters=OrderedDict([
-                            ('mention', '__mention__'),
-                            ('permission', '__any__')
+                            ('mention', PARAM_PREFAB_MENTION),
+                            ('permission', PARAM_PREFAB_ANY)
                         ])
                     ),
                     Command(
                         names=['list'],
                         function=self.list_permissions,
                         named_parameters={
-                            'mention': '__mention__',
-                            'permission': '__any__'
+                            'mention': PARAM_PREFAB_MENTION,
+                            'permission': PARAM_PREFAB_ANY
                         }
                     )
                 ]

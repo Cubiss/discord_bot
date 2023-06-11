@@ -1,13 +1,11 @@
 import asyncio
 import random
 
-import c__lib
-import discord
+from c__lib import format_table
 
 from classes.module import *
 from .characters import Characters, Character
-from c__lib import format_table
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict
 
 
 class HappyAdventureModule(Module):
@@ -36,7 +34,7 @@ class HappyAdventureModule(Module):
                     description='Set role for a character.',
                     positional_parameters=OrderedDict([
                         ('char', r'(DW|EL|HE|GN|HU)'),
-                        ('role', r'__role__')
+                        ('role', PARAM_PREFAB_ROLE)
                     ])
                     )
         )
@@ -63,7 +61,6 @@ class HappyAdventureModule(Module):
                     )
         )
 
-
         self.chars = {
             'DW': 'Dwarf',
             'EL': 'Elf',
@@ -77,7 +74,7 @@ class HappyAdventureModule(Module):
                                 function=self.add,
                                 description=f'Add current {self.chars[char]} hp',
                                 positional_parameters=OrderedDict([
-                                        ('query', '__number__')
+                                        ('query', PARAM_PREFAB_NUMBER)
                                     ])
                                 ))
 
@@ -85,7 +82,7 @@ class HappyAdventureModule(Module):
                                 function=self.add,
                                 description=f'Add current {self.chars[char]} hp',
                                 positional_parameters=OrderedDict([
-                                        ('query', '__number__')
+                                        ('query', PARAM_PREFAB_NUMBER)
                                     ])
                                 ))
 
@@ -93,7 +90,7 @@ class HappyAdventureModule(Module):
                                 function=self.add,
                                 description=f'Add current {self.chars[char]} armor',
                                 positional_parameters=OrderedDict([
-                                        ('query', '__number__')
+                                        ('query', PARAM_PREFAB_NUMBER)
                                     ])
                                 ))
 
@@ -101,7 +98,7 @@ class HappyAdventureModule(Module):
                                 function=self.set,
                                 description=f'Set current {self.chars[char]} hp',
                                 positional_parameters=OrderedDict([
-                                        ('query', '__number__')
+                                        ('query', PARAM_PREFAB_NUMBER)
                                     ])
                                 ))
 
@@ -109,7 +106,7 @@ class HappyAdventureModule(Module):
                                 function=self.set,
                                 description=f'Set current {self.chars[char]} hp',
                                 positional_parameters=OrderedDict([
-                                        ('query', '__number__')
+                                        ('query', PARAM_PREFAB_NUMBER)
                                     ])
                                 ))
 
@@ -117,7 +114,7 @@ class HappyAdventureModule(Module):
                                 function=self.set,
                                 description=f'Set current {self.chars[char]} hp',
                                 positional_parameters=OrderedDict([
-                                        ('query', '__number__')
+                                        ('query', PARAM_PREFAB_NUMBER)
                                     ])
                                 ))
 
@@ -125,7 +122,7 @@ class HappyAdventureModule(Module):
                                 function=self.damage,
                                 description=f'Damage {self.chars[char]}',
                                 positional_parameters=OrderedDict([
-                                        ('query', '__number__')
+                                        ('query', PARAM_PREFAB_NUMBER)
                                     ]),
                                 ))
 
@@ -268,7 +265,6 @@ class HappyAdventureModule(Module):
         c.save()
         await message.channel.send(f"{self.chars[c.CHARACTER_ID]} took {dmg} damage! They now have {c.HP}/{c.MAX_HP} health.")
 
-
     async def setrole(self, message, char, role, **_):
         char = char.upper()
         if char not in self.chars:
@@ -290,7 +286,7 @@ class HappyAdventureModule(Module):
             else:
                 table.append([f"`{c.CHARACTER_ID}`", 'UNASSIGNED'])
 
-        await message.channel.send(c__lib.format_table(table))
+        await message.channel.send(format_table(table))
 
     async def stats(self, message: discord.Message, **_):
         # roles = message.author.roles
@@ -307,7 +303,7 @@ class HappyAdventureModule(Module):
             # no player in the channel, print all chars
             present_characters = self.characters
 
-        t = c__lib.format_table(
+        t = format_table(
             header=["CHAR", "HP", "ARMOR"],
             table=[[self.chars[c.CHARACTER_ID], f"{c.HP}/{c.MAX_HP}", f"{c.ARMOR}"] for c in present_characters])
 

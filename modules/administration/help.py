@@ -1,11 +1,7 @@
 from collections import OrderedDict
-import re
-
-import discord
 from c__lib import format_table
 
-from classes.command import Command
-from classes.module import Module
+from classes.module import *
 
 
 class HelpModule(Module):
@@ -20,7 +16,7 @@ class HelpModule(Module):
             Command(names=['help', 'h'], function=self.help,
                     usage='__author__ Usage: !test __any__', description='Send help message.',
                     positional_parameters=OrderedDict([
-                        ("msgcontent", r'__any__')
+                        ("msgcontent", PARAM_PREFAB_ANY)
                     ]))
         )
 
