@@ -3,7 +3,10 @@ from classes.module import *
 
 class UtilitiesModule(Module):
     def __init__(self, **kwargs):
-        super().__init__("utilities", **kwargs)
+        super().__init__(
+            "utilities",
+            description="Useful commands",
+            **kwargs)
 
         self.addcom(
             Command(names=['profilepicture', 'profilepic', 'pp'],
@@ -14,7 +17,7 @@ class UtilitiesModule(Module):
                     positional_parameters={
                         'mention': '__mention__?',
                     },
-                    help_scope=Command.help_scope_global
+                    help_scope=Command.HELP_SCOPE_GLOBAL
                     )
         )
 
@@ -25,6 +28,12 @@ class UtilitiesModule(Module):
                     },
                     usage='__author__ Usage: !get_id <@mention>',
                     description='Displays discord id of mentioned user. (For devs mainly.)')
+        )
+
+        self.addcom(
+            Command(names=['get_server_id'], function=self.get_server_id,
+                    usage='__author__ Usage: !get_server_id',
+                    description='Displays discord id of current server. (For devs mainly.)')
         )
 
     async def profile_picture(self, message: discord.Message, mention, is_global, **kwargs) -> bool:
@@ -74,5 +83,18 @@ class UtilitiesModule(Module):
 
         await message.channel.send(
             f'{str(user)}\'s id: {user.id}'
+        )
+        return True
+
+    async def get_server_id(self, message: discord.Message, **kwargs):
+        """
+        Displays ID of either user or a mentioned member.
+        :param message:
+        :param kwargs:
+        :return:
+        """
+
+        await message.channel.send(
+            f'{str(message.guild.name)}\'s id: {message.guild.id}'
         )
         return True

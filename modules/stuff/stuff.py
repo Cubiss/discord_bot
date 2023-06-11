@@ -8,7 +8,10 @@ from classes.module import *
 
 class StuffModule(Module):
     def __init__(self, **kwargs):
-        super().__init__("cubot", **kwargs)
+        super().__init__(
+            "stuff",
+            description="Random commands",
+            **kwargs)
 
         self.addcom(
             Command(names=['classic'], function=self.classic_release,

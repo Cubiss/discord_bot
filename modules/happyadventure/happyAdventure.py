@@ -12,7 +12,9 @@ from collections import OrderedDict, namedtuple
 
 class HappyAdventureModule(Module):
     def __init__(self, **kwargs):
-        super().__init__("happyAdventure", **kwargs)
+        super().__init__("happyAdventure",
+                         description='Small DND-like helper module',
+                         **kwargs)
 
         self.channel = None
 
@@ -24,7 +26,7 @@ class HappyAdventureModule(Module):
                         ('dice', r'((?P<count>\d*)d(?P<faces>\d+))?'),
                         ('bonus_info', r'((?P<bonus_sign>\+|\-)(?P<bonus>\d*))?')
                         ]),
-                    help_scope=Command.help_scope_global
+                    help_scope=Command.HELP_SCOPE_GLOBAL
                     )
         )
 
@@ -57,7 +59,7 @@ class HappyAdventureModule(Module):
             Command(names=['coinflip'],
                     function=self.coinflip,
                     description='Toss a coin.',
-                    help_scope=Command.help_scope_global
+                    help_scope=Command.HELP_SCOPE_GLOBAL
                     )
         )
 
@@ -152,7 +154,8 @@ class HappyAdventureModule(Module):
 
             if count > 100000:
                 return await message.channel.send(f'For real?!')
-        except:
+        except Exception as ex:
+            self.log(f"Error in roll: {ex}")
             return await message.channel.send(f'Not like this')
 
         rolls = []

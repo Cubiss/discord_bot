@@ -8,8 +8,13 @@ from classes.logger import Logger
 
 class Module:
     name = '__uninitialized__'
+    description = '__unitialized__'
 
-    def __init__(self, name: str, client=None, log: Logger = None):
+    PRIORITY_MAX = 99
+    PRIORITY_DEFAULT = 0
+
+    def __init__(self, name: str, client=None, log: Logger = None, description: str = None, default_permissions=None,
+                 priority: int = PRIORITY_DEFAULT):
         from classes.cubot import Cubot
         self.name = name
         self.client: Cubot = client
@@ -17,16 +22,28 @@ class Module:
         if client is not None:
             self.db = client.database
 
+        self.description = description
+
+        self.default_command_permissions = default_permissions
+        self.default_command_priority = priority
+
         self.commands = []
 
         self.log = log or Logger(files=None, use_stdout=True, log_file_writes=False, add_timestamps=True)
-        self.on_message_hook_priority = 0
+
+        self.on_message_hook_priority = priority
 
     def addcom(self, command: Command):
+        if len(command.permissions) == 0:
+            command.set_permissions(self.default_command_permissions)
+
+        if command.priority == Command.PRIORITY_DEFAULT:
+            command.priority = self.default_command_priority
+
         self.commands.append(command)
 
     async def on_message(self, message: discord.Message):
-        pass
+        return False
 
     def __repr__(self):
         return f"<Module({self.name})>"
@@ -39,7 +56,7 @@ class Module:
 
         for command in self.commands:
             command: Command
-            if command.help_scope_in(Command.help_scope_module):
+            if command.help_scope_in(Command.HELP_SCOLE_GLOBAL):
                 help_str += f'{command.name:{max_command_len}}: {command.description}\n'
 
         help_str += '```'

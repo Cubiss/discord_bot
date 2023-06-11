@@ -25,7 +25,6 @@ class Entity:
         for c in columns:
             self.column_dict[c.name] = c
 
-
         if entity_item_type is not None and not issubclass(entity_item_type, EntityItem):
             raise Exception(f"{entity_item_type} is not subclass of {EntityItem}")
 
@@ -131,6 +130,9 @@ class Entity:
         else:
             self._items[item_id] = item
 
+    def __len__(self):
+        return len(self._items)
+
     def __iter__(self):
         yield from self._items.values()
 
@@ -138,7 +140,7 @@ class Entity:
         return item in self._items
 
     def values(self):
-        return self._items.values();
+        return self._items.values()
 
     def get_primary_key_columns(self):
         primary_keys = ()
@@ -147,6 +149,9 @@ class Entity:
                 primary_keys = primary_keys + (col.name, )
 
         return primary_keys
+
+    def __repr__(self):
+        return f'Entity<{self.name}[{len(self)}]>'
 
 
 class Column:

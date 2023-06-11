@@ -1,5 +1,7 @@
 from collections import OrderedDict
 
+from c__lib import format_table
+
 from classes.module import *
 from classes.cubot import Cubot
 
@@ -8,28 +10,30 @@ from modules.users.users import Users, User
 
 class AdministrationModule(Module):
     def __init__(self, **kwargs):
-        super().__init__("administration", **kwargs)
+        super().__init__(
+            "administration",
+            description="Administrative commands",
+            default_permissions="admin",
+            priority=Module.PRIORITY_MAX,
+            **kwargs)
         self.addcom(
             Command(names=['test', 't'], function=self.test,
                     usage='__author__ Usage: !test __any__', description='Test command.',
                     positional_parameters=OrderedDict([
                         ("msgcontent", r'__any__')
-                    ]),
-                    permissions=['admin'])
+                    ]))
         )
 
         self.addcom(
             Command(names=['change_username', 'cu'], function=self.change_username,
                     positional_parameters={'name': '__any__'},
-                    usage=f'__author__ Usage: !change_username <username>', description='Changes the bot''s username.',
-                    permissions=['admin'])
+                    usage=f'__author__ Usage: !change_username <username>', description='Changes the bot''s username.')
         )
 
         self.addcom(
             CommandTree(
                 names=['permission', 'permissions'],
                 description='Manage permissions',
-                permissions=['admin'],
                 children=[
                     Command(
                         names=['add'],

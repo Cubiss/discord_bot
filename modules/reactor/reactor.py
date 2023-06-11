@@ -10,7 +10,9 @@ from .reactions import Reactions, Reaction
 
 class ReactorModule(Module):
     def __init__(self, **kwargs):
-        super().__init__("reactor", **kwargs)
+        super().__init__("reactor",
+                         description="Make the bot react to messages",
+                         **kwargs)
 
         self.addcom(
             CommandTree(
@@ -51,6 +53,7 @@ class ReactorModule(Module):
         )
 
         self.reactions = Reactions(self.db)
+        self.reactions.load()
 
     async def add_reactor(self, message: discord.Message, emote, chance, cooldown, is_global, **__) -> bool:
         if len(message.mentions) == 0:
@@ -116,16 +119,15 @@ class ReactorModule(Module):
         return True
 
     async def on_message(self, message: discord.Message) -> bool:
-        retval = []
         r: Reaction
         for reaction in [r for r in self.reactions if r.USER_ID == message.author.id
-                                                      and r.SERVER_ID in (message.guild.id, None)]:
+                         and r.SERVER_ID in (message.guild.id, None)]:
             rnd = random.random()
             # self.log(f'{user_id}: {reaction.chance}|{r}')
             if reaction.CHANCE > rnd:
                 if datetime.datetime.now() > reaction.last_used + datetime.timedelta(seconds=reaction.COOLDOWN):
                     await message.add_reaction(emoji=reaction.get_emote())
                     reaction.last_used = datetime.datetime.now()
-                    self.log(f"Adding reaction to {message.author.name}: {e}")
+                    self.log(f"Adding reaction to {message.author.name}: {reaction.ID}")
 
-        return True
+        return False

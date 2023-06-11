@@ -95,14 +95,11 @@ class Cubot(discord.Client):
         if message.author == self.user:
             return
 
-        # handle help here explicitely
-        if message.content.startswith('!help'):
-            return await self.help(message)
-
         # handle all modules
         for m in sorted(self.modules, key=lambda module: module.on_message_hook_priority):
             m: Module
-            await m.on_message(message)
+            if await m.on_message(message):
+                break
 
         # check for command char
         if not message.content.startswith(self.command_character):
@@ -137,45 +134,6 @@ class Cubot(discord.Client):
                     self.log(message.content)
                     self.log(ex)
                     raise
-
-    async def help(self, message: discord.Message):
-        regex = re.compile('!help( (?P<name>.*))?')
-
-        if (m := regex.match(message.content)) is not None:
-            m: re.Match
-            names = m.group('name')
-            if names is not None:
-                names = names.split()
-            else:
-                help_str = '```'
-                help_str += 'Available commands:\n'
-
-                max_command_len = max([len(c.name) for c in self.commands])
-
-                for command in self.commands:
-                    command: Command
-                    if command.help_scope_in(Command.help_scope_global):
-                        help_str += f'{command.name:{max_command_len}}: {command.description}\n'
-
-                help_str += '```'
-
-                self.log(help_str)
-                return await message.channel.send(help_str)
-
-            while len(names) > 0:
-                name = names.pop(0).lower()
-
-                for module in self.modules:
-                    module: Module
-                    if module.name.lower() == name.lower():
-                        return await module.send_help(message)
-
-                for command in self.commands:
-                    if name in command.names:
-                        return await command.send_help(message, names=names)
-
-                else:
-                    return await message.channel.send(f'Command "{name}" not found.')
 
     def load_modules(self, modules):
         for cls in modules:

@@ -9,7 +9,9 @@ from .sendChannels import SendChannel, SendChannels
 
 class SendModule(Module):
     def __init__(self, **kwargs):
-        super().__init__("send", **kwargs)
+        super().__init__("send",
+                         description='Make the bot send messages',
+                         **kwargs)
         self.recently_sent_texts = []
         self.recently_sent_messages = []
         self.channel = None

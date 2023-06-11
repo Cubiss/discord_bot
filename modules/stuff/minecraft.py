@@ -5,12 +5,15 @@ from modules.users.users import User
 
 class MinecraftModule(Module):
     def __init__(self, **kwargs):
-        super().__init__("minecraft", **kwargs)
+        super().__init__(
+            "minecraft",
+            description="Minecraft server manager",
+            **kwargs)
 
         self.addcom(
             Command(names=['minecraft'], function=self.minecraft,
                     description='Displays minecraft server\'s address.',
-                    help_scope=Command.help_scope_global
+                    help_scope=Command.HELP_SCOPE_GLOBAL
                     )
         )
 

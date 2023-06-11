@@ -14,25 +14,35 @@ class Command:
     # client: reference to Cubot
     command_parameters = ['message', 'db', 'client', 'user']
 
+    PARAM_PREFAB_INTEGER = '__integer__'
+    PARAM_PREFAB_MENTION = '__mention__'
+    PARAM_PREFAB_ROLE = '__role__'
+    PARAM_PREFAB_CHANNEL = '__channel__'
+    PARAM_PREFAB_NUMBER = '__number__'
+    PARAM_PREFAB_ANY = '__any__'
+    PARAM_PREFAB_ALL = '__all__'
+
     _param_prefabs = {
-        '__integer__': r'\d*',
-        '__mention__': r'<@(?P<__value__>.*?)>',
-        '__role__': r'<@&(?P<__value__>.*?)>',
-        '__channel__': r'<#(?P<__value__>.*?)>',
-        '__number__': r'(\+|\-)?\d?\.?\d+%?',
-        '__any__': r'".+?"|\S+',
-        '__all__': r'.*?'
+        PARAM_PREFAB_INTEGER: r'\d*',
+        PARAM_PREFAB_MENTION: r'<@(?P<__value__>.*?)>',
+        PARAM_PREFAB_ROLE: r'<@&(?P<__value__>.*?)>',
+        PARAM_PREFAB_CHANNEL: r'<#(?P<__value__>.*?)>',
+        PARAM_PREFAB_NUMBER: r'(\+|\-)?\d?\.?\d+%?',
+        PARAM_PREFAB_ANY: r'".+?"|\S+',
+        PARAM_PREFAB_ALL: r'.*?'
     }
 
+    HELP_SCOPE_GLOBAL = 'global'
+    HELP_SCOLE_GLOBAL = 'module'
+    HELP_SCOPE_COMMAND = 'command'
+
     _help_scopes = [
-        'global',
-        'module',
-        'command'
+        HELP_SCOPE_GLOBAL,
+        HELP_SCOLE_GLOBAL,
+        HELP_SCOPE_COMMAND
     ]
 
-    help_scope_global = 'global'
-    help_scope_module = 'module'
-    help_scope_command = 'command'
+    PRIORITY_DEFAULT = 0
 
     @property
     def name(self):
@@ -42,7 +52,8 @@ class Command:
 
     def __init__(self, names: list, function: callable, usage=None, description='',
                  permissions: list = None, timeout=5, flags: dict = None,
-                 positional_parameters: dict = None, named_parameters: dict = None, help_scope: str = 'module'):
+                 positional_parameters: dict = None, named_parameters: dict = None, help_scope: str = 'module',
+                 priority=PRIORITY_DEFAULT):
         """
         Creates a command.
         :param named_parameters: Automatically generated string parameters
@@ -78,13 +89,13 @@ class Command:
             self.usage = usage or self.build_usage()
 
             self.description = description
-            if permissions is None:
-                permissions = []
-            if type(permissions) == str:
-                permissions = [permissions]
-            self.permissions = permissions
+
+            self.permissions = None
+            self.set_permissions(permissions)
 
             self.timeout = timeout
+
+            self.priority = priority
 
         except Exception as ex:
             raise Exception(f'[{self.name}] {ex}')
@@ -145,6 +156,7 @@ class Command:
             return await self.function(**params)
         except Exception as ex:
             # await message.channel.send(f"ERROR: {ex}")
+            print(ex)
             return False
 
     async def send_help(self, message: discord.Message, names=None):
@@ -251,25 +263,32 @@ class Command:
             raise Exception(f"Invalid help scope: '{scope}'\n"
                             f"Valid scopes:{', '.join(Command._help_scopes)}")
 
-        if scope == Command.help_scope_global:
+        if scope == Command.HELP_SCOPE_GLOBAL:
             return self.help_scope in [
-                Command.help_scope_global
+                Command.HELP_SCOPE_GLOBAL
             ]
 
-        if scope == Command.help_scope_module:
+        if scope == Command.HELP_SCOLE_GLOBAL:
             return self.help_scope in [
-                Command.help_scope_global,
-                Command.help_scope_module
+                Command.HELP_SCOPE_GLOBAL,
+                Command.HELP_SCOLE_GLOBAL
             ]
 
-        if scope == Command.help_scope_command:
+        if scope == Command.HELP_SCOPE_COMMAND:
             return self.help_scope in [
-                Command.help_scope_global,
-                Command.help_scope_module,
-                Command.help_scope_command
+                Command.HELP_SCOPE_GLOBAL,
+                Command.HELP_SCOLE_GLOBAL,
+                Command.HELP_SCOPE_COMMAND
             ]
 
         raise Exception(f"Scope not implemented: {scope}")
+
+    def set_permissions(self, permissions):
+        if permissions is None:
+            permissions = []
+        if type(permissions) == str:
+            permissions = [permissions]
+        self.permissions = permissions
 
 
 def change_key(d: OrderedDict, old, new):
