@@ -35,6 +35,9 @@ class ReactorModule(Module):
                     ),
                     Command(
                         names=['list'],
+                        flags={
+                          'all': 'all'
+                        },
                         function=self.list_reactors,
                         description='List all reactors relevant to this server.'
                     ),
@@ -97,13 +100,13 @@ class ReactorModule(Module):
         except Exception as ex:
             await message.channel.send(f'{message.author.mention} There was an error: {ex}')
 
-    async def list_reactors(self, message: discord.Message, **__) -> bool:
+    async def list_reactors(self, message: discord.Message, all, **__) -> bool:
         table = []
 
         r: Reaction
         for r in self.reactions:
-            if r.SERVER_ID is None or r.SERVER_ID == message.guild.id:
-                table.append(['`' + str(r.ID), r.USER_NAME, str(r.CHANCE), str(r.COOLDOWN), '`' + r.get_emote()])
+            if all or r.SERVER_ID is None or r.SERVER_ID == message.guild.id:
+                table.append(['`' + str(r.ID), r.USER_NAME, str(r.CHANCE), str(r.COOLDOWN), '`' + r.EMOTE])
 
         if len(table) == 0:
             await message.channel.send(f'There are no reactors present yet.')
